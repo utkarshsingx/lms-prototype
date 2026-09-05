@@ -54,7 +54,7 @@ export function StatTile({
   value: React.ReactNode;
   delta?: { value: string; up?: boolean };
   spark?: number[];
-  tone?: "brand" | "jade" | "ember" | "violet";
+  tone?: "brand" | "jade" | "ember" | "violet" | "amber" | "rose";
   icon?: React.ReactNode;
   className?: string;
 }) {
@@ -92,7 +92,11 @@ export function StatTile({
       </div>
       {spark ? (
         <div className="mt-3 -mb-1">
-          <Sparkline data={spark} tone={tone} height={30} />
+          <Sparkline
+            data={spark}
+            tone={tone === "amber" || tone === "rose" ? "ember" : tone}
+            height={30}
+          />
         </div>
       ) : null}
     </div>
