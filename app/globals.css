@@ -1,26 +1,245 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================
+   MERIDIAN — design tokens
+   Warm paper ground, near-black ink, one electric accent.
+   Every color is defined here in light, overridden in .dark,
+   and exposed to Tailwind through @theme inline below.
+   ============================================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* surfaces */
+  --paper: #fbfaf8;
+  --surface: #ffffff;
+  --surface-2: #f5f3ee;
+  --surface-3: #ebe7de;
+  --surface-inv: #14161b;
+
+  /* hairlines */
+  --line: #e7e2d8;
+  --line-strong: #d4cec1;
+
+  /* ink */
+  --ink: #111317;
+  --ink-2: #4c535d;
+  --ink-3: #8a919c;
+  --ink-inv: #f7f6f3;
+
+  /* brand — electric cobalt */
+  --brand: #2d5bff;
+  --brand-hover: #1e42d0;
+  --brand-soft: #e9edff;
+  --brand-line: #c3cffe;
+  --on-brand: #ffffff;
+
+  /* semantic accents */
+  --jade: #0f7a5a;
+  --jade-soft: #e1f2ec;
+  --ember: #d6520a;
+  --ember-soft: #fceee3;
+  --amber: #9a6400;
+  --amber-soft: #faf0d9;
+  --rose: #bd2f48;
+  --rose-soft: #fbe8eb;
+  --violet: #6a37cf;
+  --violet-soft: #efe9fc;
+
+  /* effects */
+  --ring: color-mix(in oklab, var(--brand) 35%, transparent);
+  --shadow-color: 32 30 24;
+
+  color-scheme: light;
+}
+
+.dark {
+  --paper: #0a0b0e;
+  --surface: #121419;
+  --surface-2: #191c22;
+  --surface-3: #21252d;
+  --surface-inv: #f3f2ef;
+
+  --line: #24282f;
+  --line-strong: #363b45;
+
+  --ink: #f2f1ee;
+  --ink-2: #a5acb7;
+  --ink-3: #6c737e;
+  --ink-inv: #14161b;
+
+  --brand: #7093ff;
+  --brand-hover: #8aa6ff;
+  --brand-soft: #161d33;
+  --brand-line: #29334f;
+  --on-brand: #0a0f22;
+
+  --jade: #45b892;
+  --jade-soft: #10231d;
+  --ember: #f0803c;
+  --ember-soft: #26170f;
+  --amber: #d8a238;
+  --amber-soft: #221a0c;
+  --rose: #ef6a80;
+  --rose-soft: #261216;
+  --violet: #a281f0;
+  --violet-soft: #1b1530;
+
+  --shadow-color: 0 0 0;
+
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-inv: var(--surface-inv);
+
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-inv: var(--ink-inv);
+
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-line: var(--brand-line);
+  --color-on-brand: var(--on-brand);
+
+  --color-jade: var(--jade);
+  --color-jade-soft: var(--jade-soft);
+  --color-ember: var(--ember);
+  --color-ember-soft: var(--ember-soft);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-rose: var(--rose);
+  --color-rose-soft: var(--rose-soft);
+  --color-violet: var(--violet);
+  --color-violet-soft: var(--violet-soft);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), ui-serif, Georgia, serif;
+  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.375rem;
+  --radius-2xl: 1.75rem;
+
+  --shadow-e1: 0 1px 2px rgb(var(--shadow-color) / 0.05);
+  --shadow-e2: 0 1px 2px rgb(var(--shadow-color) / 0.04), 0 4px 12px -2px rgb(var(--shadow-color) / 0.06);
+  --shadow-e3: 0 1px 2px rgb(var(--shadow-color) / 0.05), 0 8px 24px -4px rgb(var(--shadow-color) / 0.10);
+  --shadow-e4: 0 2px 4px rgb(var(--shadow-color) / 0.06), 0 20px 48px -8px rgb(var(--shadow-color) / 0.16);
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
+    font-variant-ligatures: contextual;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--brand) 22%, transparent);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* numerals line up in tables and stat blocks */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* the one true page container */
+  .shell-pad {
+    padding-inline: clamp(1rem, 1rem + 1.2vw, 2.5rem);
+  }
+
+  .hairline {
+    border-color: var(--line);
+  }
+
+  /* subtle paper grain — only rendered on large ambient surfaces */
+  .grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.35;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+  }
+}
+
+@layer utilities {
+  .scrollbar-slim {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+  .scrollbar-slim::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-slim::-webkit-scrollbar-thumb {
+    background: var(--line-strong);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
