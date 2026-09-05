@@ -29,7 +29,7 @@ function inferType(title: string, index: number, isLast: boolean): LessonType {
   if (t.includes("deck") || t.includes("slides")) return "slides";
   if (t.includes("simulation") || t.includes("scenario")) return "scorm";
   if (isLast) return "quiz";
-  const cycle: LessonType[] = ["video", "video", "article", "video", "lab"];
+  const cycle: LessonType[] = ["video", "video", "article", "video", "slides"];
   return cycle[index % cycle.length];
 }
 

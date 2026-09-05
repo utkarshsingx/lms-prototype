@@ -117,7 +117,7 @@ export function Player({ course }: { course: Course }) {
           <ArrowLeft className="size-4" /> {course.title}
         </Link>
         <div className="ml-auto flex items-center gap-3">
-          <span className="text-[12.5px] text-ink-3 tnum">
+          <span className="hidden text-[12.5px] whitespace-nowrap text-ink-3 tnum sm:block">
             {doneCount} of {lessonCount(course)} lessons
           </span>
           <Progress
@@ -130,7 +130,7 @@ export function Player({ course }: { course: Course }) {
           </span>
           <button
             onClick={() => setRailOpen((r) => !r)}
-            className="hidden rounded-[var(--radius-sm)] border border-line bg-surface px-2.5 py-1.5 text-[12px] font-medium text-ink-2 shadow-[var(--shadow-e1)] hover:bg-surface-2 xl:block"
+            className="hidden rounded-[var(--radius-sm)] border border-line bg-surface px-2.5 py-1.5 text-[12px] font-medium whitespace-nowrap text-ink-2 shadow-[var(--shadow-e1)] hover:bg-surface-2 xl:block"
           >
             {railOpen ? "Hide curriculum" : "Show curriculum"}
           </button>
