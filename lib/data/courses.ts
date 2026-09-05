@@ -410,7 +410,6 @@ const seeds: Seed[] = [
     updated: "2026-06-11",
     tags: ["SQL", "dbt", "Modelling", "Testing"],
     accent: "brand",
-    progress: 0,
     certificate: true,
     outcomes: [
       "Write window functions without reaching for documentation",
@@ -473,7 +472,6 @@ const seeds: Seed[] = [
     updated: "2026-08-05",
     tags: ["Management", "Feedback", "Career"],
     accent: "ember",
-    progress: 0,
     certificate: true,
     outcomes: [
       "Run a one-to-one that is not a status update",
@@ -535,7 +533,6 @@ const seeds: Seed[] = [
     updated: "2026-05-22",
     tags: ["Accessibility", "WCAG", "Front-end"],
     accent: "jade",
-    progress: 0,
     certificate: true,
     outcomes: [
       "Navigate your own product with a screen reader",
@@ -586,7 +583,6 @@ const seeds: Seed[] = [
     updated: "2026-04-18",
     tags: ["AWS", "FinOps", "Architecture"],
     accent: "amber",
-    progress: 0,
     certificate: true,
     outcomes: [
       "Read a cloud invoice and find the three biggest lines",
@@ -636,7 +632,6 @@ const seeds: Seed[] = [
     updated: "2026-07-02",
     tags: ["Writing", "Communication", "RFC"],
     accent: "violet",
-    progress: 0,
     certificate: true,
     outcomes: [
       "Write a design doc that gets a decision",
