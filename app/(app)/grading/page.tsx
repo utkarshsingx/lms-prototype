@@ -26,7 +26,7 @@ export default function GradingPage() {
           label="Median turnaround"
           value="19h"
           tone="jade"
-          delta={{ value: "6h faster", up: true }}
+          delta={{ value: "6h faster" }}
           spark={[38, 34, 31, 29, 26, 24, 22, 20, 19]}
           icon={<Timer />}
         />

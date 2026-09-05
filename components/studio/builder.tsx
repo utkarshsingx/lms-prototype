@@ -223,7 +223,7 @@ export function CourseBuilder({ course }: { course: Course }) {
         ]}
       />
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_19rem]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_19rem]">
         <div className="min-w-0">
           {tab === "curriculum" ? (
             <div className="space-y-4">

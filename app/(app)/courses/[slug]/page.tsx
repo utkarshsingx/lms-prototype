@@ -99,7 +99,7 @@ export default async function CoursePage({
         <span>{course.category}</span>
       </nav>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_21rem] xl:gap-10">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_21rem] xl:gap-10">
         <div className="min-w-0 space-y-9">
           <header>
             <div className="flex flex-wrap items-center gap-2">

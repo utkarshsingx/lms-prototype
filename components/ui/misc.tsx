@@ -86,7 +86,10 @@ export function StatTile({
               delta.up === false ? "text-rose" : "text-jade",
             )}
           >
-            {delta.up === false ? "↓" : "↑"} {delta.value}
+            {/* An arrow only where a direction is actually meant. "6h faster"
+                carries its own sign; an up-arrow beside a falling line does not. */}
+            {typeof delta.up === "boolean" ? (delta.up ? "↑ " : "↓ ") : ""}
+            {delta.value}
           </span>
         ) : null}
       </div>

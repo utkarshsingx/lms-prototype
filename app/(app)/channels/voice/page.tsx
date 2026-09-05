@@ -45,7 +45,7 @@ export default function VoicePage() {
           label="Connect rate"
           value={`${v.connectRate}%`}
           tone="jade"
-          delta={{ value: "4 pts" }}
+          delta={{ value: "4 pts", up: true }}
         />
         <StatTile
           label="Median call length"
@@ -73,7 +73,7 @@ export default function VoicePage() {
         </SectionTitle>
         <div className="grid gap-4 lg:grid-cols-2">
           {campaigns.map((c) => (
-            <Card key={c.id} className="p-5">
+            <Card key={c.id} className="flex flex-col p-5">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge tone={statusTone[c.status]} dot>
                   {c.status}
@@ -94,7 +94,7 @@ export default function VoicePage() {
               </p>
               <p className="mt-2 text-[12px] text-ink-3">{c.audience}</p>
 
-              <div className="mt-4">
+              <div className="mt-auto pt-4">
                 <div className="mb-1.5 flex items-baseline justify-between">
                   <span className="text-[11.5px] text-ink-3">Reached</span>
                   <span className="text-[11.5px] font-medium text-ink tnum">

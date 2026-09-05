@@ -78,7 +78,7 @@ export function VoiceConsole() {
         : calls.filter((c) => c.transcript.length > 0);
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_20rem]">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="min-w-0 space-y-4">
         <Segmented
           value={filter}
@@ -160,7 +160,7 @@ export function VoiceConsole() {
               {expanded ? (
                 <div className="border-t border-line">
                   {c.transcript.length ? (
-                    <div className="grid gap-0 lg:grid-cols-[1fr_16rem]">
+                    <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_16rem]">
                       <div className="scrollbar-slim max-h-80 space-y-3.5 overflow-y-auto p-5">
                         {c.transcript.map((t, i) => (
                           <div key={i} className="flex gap-3">

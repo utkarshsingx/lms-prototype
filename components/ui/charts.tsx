@@ -74,7 +74,7 @@ export function BarChart({
 }) {
   const max = Math.max(...data, 1);
   return (
-    <div>
+    <div className="overflow-x-clip">
       <div
         className="flex items-end gap-1.5"
         style={{ height }}
@@ -84,7 +84,7 @@ export function BarChart({
         {data.map((d, i) => {
           const active = highlight == null || highlight === i;
           return (
-            <div key={i} className="group relative flex-1">
+            <div key={i} className="group relative min-w-0 flex-1">
               <div
                 className={cn(
                   "w-full rounded-t-[4px] transition-all duration-500 ease-[var(--ease-out-quint)]",
@@ -107,7 +107,7 @@ export function BarChart({
         {labels.map((l, i) => (
           <span
             key={i}
-            className="flex-1 text-center text-[10.5px] text-ink-3"
+            className="min-w-0 flex-1 truncate text-center text-[10.5px] text-ink-3"
           >
             {l}
           </span>

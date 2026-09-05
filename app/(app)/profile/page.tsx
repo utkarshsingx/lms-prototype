@@ -111,7 +111,7 @@ export default function ProfilePage() {
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_1fr]">
         <div className="space-y-6">
           <Card>
             <CardHeader
@@ -182,7 +182,7 @@ export default function ProfilePage() {
           </Card>
         </div>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <Card>
             <CardHeader title="Current path" sub={myPath.title} />
             <div className="border-t border-line px-5 py-4">

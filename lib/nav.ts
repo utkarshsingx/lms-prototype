@@ -63,3 +63,16 @@ export function isActive(pathname: string, item: NavItem) {
   if (item.href !== "/" && pathname.startsWith(item.href + "/")) return true;
   return (item.match ?? []).some((m) => pathname.startsWith(m));
 }
+
+/** Routes that only make sense with the manage nav visible. */
+const ADMIN_PREFIXES = [
+  "/manage",
+  "/studio",
+  "/grading",
+  "/people",
+  "/channels",
+  "/settings",
+];
+
+export const isAdminPath = (pathname: string) =>
+  ADMIN_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));

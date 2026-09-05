@@ -95,7 +95,7 @@ export default function DashboardPage() {
 
       {/* Continue — the single most important thing on this page */}
       <Card className="overflow-hidden">
-        <div className="grid lg:grid-cols-[1.35fr_1fr]">
+        <div className="grid lg:grid-cols-[minmax(0,1.35fr)_1fr]">
           <div className="relative flex flex-col justify-between gap-6 p-6 sm:p-7">
             <div>
               <div className="flex items-center gap-2.5">
@@ -207,8 +207,8 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
-        <div className="space-y-6">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <div className="min-w-0 space-y-6">
           {/* Active courses */}
           <div>
             <SectionTitle
@@ -310,7 +310,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           {/* This week */}
           <Card>
             <CardHeader

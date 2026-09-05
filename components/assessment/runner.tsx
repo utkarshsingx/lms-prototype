@@ -402,7 +402,7 @@ export function AssessmentRunner({
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_15rem]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_15rem]">
         <div className="min-w-0">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div

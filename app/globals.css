@@ -181,6 +181,14 @@
     color: inherit;
   }
 
+  /* Grid items default to min-width:auto, so a single unbreakable child - a
+     truncated line, a chart's week labels - widens the whole track and scrolls
+     the page sideways. :where() keeps specificity at 0 so any min-w-* utility
+     still wins where an item genuinely must not shrink. */
+  :where(.grid) > * {
+    min-width: 0;
+  }
+
   /* numerals line up in tables and stat blocks */
   .tnum {
     font-variant-numeric: tabular-nums;

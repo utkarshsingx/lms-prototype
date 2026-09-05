@@ -56,14 +56,14 @@ export default function ManagePage() {
         <StatTile
           label="Active learners, 30 days"
           value={orgStats.activeLearners.value.toLocaleString()}
-          delta={{ value: orgStats.activeLearners.delta }}
+          delta={{ value: orgStats.activeLearners.delta, up: true }}
           spark={orgStats.activeLearners.spark}
           icon={<Users />}
         />
         <StatTile
           label="Learning hours, this month"
           value={orgStats.hoursThisMonth.value.toLocaleString()}
-          delta={{ value: orgStats.hoursThisMonth.delta }}
+          delta={{ value: orgStats.hoursThisMonth.delta, up: true }}
           spark={orgStats.hoursThisMonth.spark}
           tone="violet"
           icon={<Clock />}
@@ -71,7 +71,7 @@ export default function ManagePage() {
         <StatTile
           label="Completion rate"
           value={`${orgStats.completionRate.value}%`}
-          delta={{ value: orgStats.completionRate.delta }}
+          delta={{ value: orgStats.completionRate.delta, up: true }}
           spark={orgStats.completionRate.spark}
           tone="jade"
           icon={<TrendingUp />}
@@ -86,7 +86,7 @@ export default function ManagePage() {
         />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_1fr]">
         <Card>
           <CardHeader
             title="Learning minutes per learner"
@@ -102,7 +102,7 @@ export default function ManagePage() {
           </div>
         </Card>
 
-        <Card>
+        <Card className="min-w-0">
           <CardHeader
             title="How people get enrolled"
             sub="Compliance dominates, which is honest rather than flattering"

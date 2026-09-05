@@ -24,10 +24,9 @@ export function Progress({
       aria-valuenow={Math.round(pct)}
       aria-valuemin={0}
       aria-valuemax={100}
-      className={cn(
-        "w-full overflow-hidden rounded-full bg-surface-3",
-        className,
-      )}
+      // No w-full here: a block div already fills its container, and hardcoding
+      // it fought every caller that passes an explicit width like `w-20`.
+      className={cn("overflow-hidden rounded-full bg-surface-3", className)}
       style={{ height }}
     >
       <div

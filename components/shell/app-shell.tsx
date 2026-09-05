@@ -3,13 +3,22 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { RoleProvider } from "@/lib/role";
+import { RoleProvider, useRole } from "@/lib/role";
+import { isAdminPath } from "@/lib/nav";
 import { AssistantDock } from "@/components/assistant/dock";
 import { CommandPalette } from "./command-palette";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  return (
+    <RoleProvider>
+      <Shell>{children}</Shell>
+    </RoleProvider>
+  );
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
   const [nav, setNav] = useState(false);
   const [search, setSearch] = useState(false);
   const pathname = usePathname();
@@ -27,8 +36,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => setNav(false), [pathname]);
 
+  // Landing on /grading from a link should not leave the learner nav up.
+  const { role, setRole } = useRole();
+  useEffect(() => {
+    if (isAdminPath(pathname) && role === "learner") setRole("admin");
+  }, [pathname, role, setRole]);
+
   return (
-    <RoleProvider>
+    <>
       <div className="min-h-dvh">
         {/* Desktop rail */}
         <aside className="fixed inset-y-0 left-0 z-50 hidden w-64 lg:block">
@@ -67,6 +82,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <CommandPalette open={search} onClose={() => setSearch(false)} />
         <AssistantDock />
       </div>
-    </RoleProvider>
+    </>
   );
 }

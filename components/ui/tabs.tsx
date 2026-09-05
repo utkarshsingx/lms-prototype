@@ -71,7 +71,7 @@ export function Segmented({
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-0.5 rounded-[var(--radius-md)] border border-line bg-surface-2 p-0.5",
+        "scrollbar-none inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-[var(--radius-md)] border border-line bg-surface-2 p-0.5",
         className,
       )}
     >

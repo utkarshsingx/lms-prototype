@@ -67,7 +67,7 @@ export default async function PathPage({
         <span>{path.kind}</span>
       </nav>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_20rem] xl:gap-10">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] xl:gap-10">
         <div className="min-w-0 space-y-9">
           <header>
             <Badge tone={path.accent as Tone}>{path.kind} path</Badge>

@@ -39,7 +39,7 @@ export default function AssistantPage() {
         sub="It is grounded in your record and the course content, and it can act on the platform. Where it cannot act, it says so and hands off to a person with the context attached."
       />
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <Card className="flex h-[min(660px,78vh)] flex-col overflow-hidden">
           <div className="flex items-center gap-3 border-b border-line px-5 py-3.5">
             <span className="grid size-8 place-items-center rounded-full bg-violet-soft text-violet">
