@@ -146,10 +146,14 @@ export function WhatsappInbox() {
               >
                 <div className="max-w-[78%]">
                   {m.action ? (
-                    <p className="mb-1.5 ml-auto inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2 py-0.5 text-[11px] text-ink-3">
-                      <Wrench className="size-3" />
-                      {m.action}
-                    </p>
+                    // margin-auto does not push an inline-flex box, so the chip
+                    // needs a flex parent to sit flush with its own bubble.
+                    <div className="mb-1.5 flex justify-end">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2 py-0.5 text-[11px] text-ink-3">
+                        <Wrench className="size-3" />
+                        {m.action}
+                      </span>
+                    </div>
                   ) : null}
                   <div
                     className={cn(
