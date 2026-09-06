@@ -107,9 +107,13 @@ export default function Landing() {
           </nav>
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2.5">
             <ThemeMenu />
-            <LinkButton href="/login" variant="ghost" size="sm">
-              Sign in
-            </LinkButton>
+            {/* `hidden` and the button's own `inline-flex` are both display
+                utilities in the same layer, so a wrapper decides it outright. */}
+            <span className="hidden sm:contents">
+              <LinkButton href="/login" variant="ghost" size="sm">
+                Sign in
+              </LinkButton>
+            </span>
             <LinkButton href="/signup" size="sm">
               Get started
             </LinkButton>

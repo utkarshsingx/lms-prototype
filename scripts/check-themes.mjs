@@ -85,6 +85,11 @@ const CHECKS = [
   ["ink-2", "surface", 7, "body text"],
   ["ink-3", "surface", 4.5, "metadata"],
   ["ink-3", "surface-2", 4.5, "metadata on raised panels"],
+  // Sidebar count badges and the avatar overflow chip put ink-2 on surface-3.
+  ["ink-2", "surface-3", 4.5, "counts on inset chips"],
+  // Only the disabled send button; WCAG exempts disabled controls, so this is
+  // tracked at a lower floor rather than held to 4.5.
+  ["ink-3", "surface-3", 3, "disabled control label"],
   ["on-brand", "brand", 4.5, "primary button label"],
   ["on-accent", "jade", 4.5, "label on a success fill"],
   ["on-accent", "rose", 4.5, "label on a danger fill"],

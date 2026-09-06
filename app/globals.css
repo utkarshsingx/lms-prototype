@@ -213,7 +213,11 @@
   body {
     background: var(--paper);
     color: var(--ink);
-    font-family: var(--font-sans);
+    /* --stack-sans, not --font-sans: `@theme inline` substitutes theme values
+       into the utilities and does NOT emit the theme key as a variable, so
+       --font-sans only exists here because Tailwind happens to need it for
+       --default-font-family. Depend on the variable we own. */
+    font-family: var(--stack-sans);
     font-feature-settings: var(--font-features);
     font-variant-ligatures: contextual;
     /* Several display faces ship one weight only. Synthetic bold fattens the
