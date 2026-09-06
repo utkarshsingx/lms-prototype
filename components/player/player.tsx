@@ -160,7 +160,7 @@ export function Player({ course }: { course: Course }) {
                 </Badge>
               ) : null}
             </div>
-            <h1 className="mt-2.5 font-display text-[clamp(1.5rem,1.2rem+1.1vw,2.1rem)] leading-[1.1] tracking-[-0.02em] text-ink">
+            <h1 className="mt-2.5 font-display text-[clamp(1.5rem,1.2rem+1.1vw,2.1rem)] leading-[1.1] tracking-[var(--display-tracking)] text-ink">
               {lesson.title}
             </h1>
           </div>

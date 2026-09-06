@@ -5,6 +5,7 @@ import { Bell, Menu, Moon, Search, Sun } from "lucide-react";
 import { IconButton } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/misc";
 import { useTheme } from "@/components/theme-provider";
+import { ThemeMenu } from "@/components/theme/theme-picker";
 import { Wordmark } from "./brand";
 
 export function Topbar({
@@ -14,7 +15,7 @@ export function Topbar({
   onOpenNav: () => void;
   onOpenSearch: () => void;
 }) {
-  const { theme, toggle } = useTheme();
+  const { mode, toggleMode } = useTheme();
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-paper/85 backdrop-blur-xl">
       <div className="shell-pad flex h-14 items-center gap-3">
@@ -43,12 +44,13 @@ export function Topbar({
         </button>
 
         <div className="flex items-center gap-1">
+          <ThemeMenu />
           <IconButton
-            label={theme === "dark" ? "Switch to light" : "Switch to dark"}
+            label={mode === "dark" ? "Switch to light" : "Switch to dark"}
             size="sm"
-            onClick={toggle}
+            onClick={toggleMode}
           >
-            {theme === "dark" ? (
+            {mode === "dark" ? (
               <Sun className="size-4" />
             ) : (
               <Moon className="size-4" />

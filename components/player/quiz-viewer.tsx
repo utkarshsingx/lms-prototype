@@ -81,7 +81,7 @@ export function QuizViewer({ lesson }: { lesson: Lesson }) {
             <X className="size-6" strokeWidth={2.5} />
           )}
         </span>
-        <h3 className="mt-5 font-display text-[1.9rem] leading-tight tracking-[-0.02em] text-ink tnum">
+        <h3 className="mt-5 font-display text-[1.9rem] leading-tight tracking-[var(--display-tracking)] text-ink tnum">
           {pct}%
         </h3>
         <p className="mt-1.5 text-[14px] text-ink-2 tnum">
@@ -148,9 +148,9 @@ export function QuizViewer({ lesson }: { lesson: Lesson }) {
                   className={cn(
                     "mt-px grid size-5 shrink-0 place-items-center rounded-full border font-mono text-[11px] font-semibold",
                     show && isAnswer
-                      ? "border-jade bg-jade text-white"
+                      ? "border-jade bg-jade text-on-accent"
                       : show && isPicked
-                        ? "border-rose bg-rose text-white"
+                        ? "border-rose bg-rose text-on-accent"
                         : isPicked
                           ? "border-brand bg-brand text-on-brand"
                           : "border-line-strong text-ink-3",

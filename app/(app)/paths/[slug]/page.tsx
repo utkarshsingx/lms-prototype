@@ -71,7 +71,7 @@ export default async function PathPage({
         <div className="min-w-0 space-y-9">
           <header>
             <Badge tone={path.accent as Tone}>{path.kind} path</Badge>
-            <h1 className="mt-3.5 font-display text-[clamp(2rem,1.5rem+2vw,3rem)] leading-[1.04] tracking-[-0.022em] text-ink">
+            <h1 className="mt-3.5 font-display text-[clamp(2rem,1.5rem+2vw,3rem)] leading-[1.04] tracking-[var(--display-tracking)] text-ink">
               {path.title}
             </h1>
             <p className="mt-3.5 max-w-2xl text-[15.5px] leading-[1.7] text-ink-2">
@@ -145,7 +145,7 @@ export default async function PathPage({
                       className={cn(
                         "relative z-10 mt-2 grid size-10 shrink-0 place-items-center rounded-full border-2 text-[13px] font-semibold tnum",
                         state === "done"
-                          ? "border-jade bg-jade text-white"
+                          ? "border-jade bg-jade text-on-accent"
                           : state === "active"
                             ? "border-brand bg-surface text-brand"
                             : "border-line bg-surface text-ink-3",

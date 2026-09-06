@@ -27,7 +27,7 @@ export function PageHeader({
             {eyebrow}
           </p>
         ) : null}
-        <h1 className="font-display text-[clamp(1.75rem,1.3rem+1.6vw,2.5rem)] leading-[1.08] tracking-[-0.015em] text-ink">
+        <h1 className="font-display text-[clamp(1.75rem,1.3rem+1.6vw,2.5rem)] leading-[1.08] tracking-[var(--display-tracking)] text-ink">
           {title}
         </h1>
         {sub ? (

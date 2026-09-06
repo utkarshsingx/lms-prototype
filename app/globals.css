@@ -24,20 +24,20 @@
   /* ink */
   --ink: #111317;
   --ink-2: #4c535d;
-  --ink-3: #8a919c;
+  --ink-3: #676e7a;
   --ink-inv: #f7f6f3;
 
   /* brand — electric cobalt */
   --brand: #2d5bff;
   --brand-hover: #1e42d0;
-  --brand-soft: #e9edff;
+  --brand-soft: #ecf0ff;
   --brand-line: #c3cffe;
   --on-brand: #ffffff;
 
   /* semantic accents */
   --jade: #0f7a5a;
   --jade-soft: #e1f2ec;
-  --ember: #d6520a;
+  --ember: #b64606;
   --ember-soft: #fceee3;
   --amber: #9a6400;
   --amber-soft: #faf0d9;
@@ -45,6 +45,38 @@
   --rose-soft: #fbe8eb;
   --violet: #6a37cf;
   --violet-soft: #efe9fc;
+  --on-accent: #ffffff;
+
+  /* Dark-by-nature surfaces: video chrome, code, marketing showcase panels.
+     Constant across light and dark, themed per palette. */
+  --stage: #0a0b0e;
+  --stage-2: #191c22;
+  --stage-3: #21252d;
+  --stage-ink: #f2f1ee;
+  --stage-ink-2: #a5acb7;
+  --stage-ink-3: #828994;
+  --stage-line: #24282f;
+  --stage-line-strong: #363b45;
+  --stage-brand: #7093ff;
+  --stage-brand-soft: #161d33;
+  --stage-jade: #45b892;
+  --stage-ember: #f0803c;
+  --stage-amber: #d8a238;
+  --stage-rose: #ef6a80;
+  --stage-violet: #a281f0;
+
+  /* type + geometry — overridden per theme by the generated stylesheet */
+  --stack-display: var(--ff-instrument-serif), ui-serif, Georgia, serif;
+  --stack-sans: var(--ff-inter), ui-sans-serif, system-ui, sans-serif;
+  --stack-mono: var(--ff-jetbrains), ui-monospace, SFMono-Regular, monospace;
+  --display-tracking: -0.02em;
+
+  --r-xs: 0.375rem;
+  --r-sm: 0.5rem;
+  --r-md: 0.75rem;
+  --r-lg: 1rem;
+  --r-xl: 1.375rem;
+  --r-2xl: 1.75rem;
 
   /* effects */
   --ring: color-mix(in oklab, var(--brand) 35%, transparent);
@@ -84,6 +116,7 @@
   --rose-soft: #261216;
   --violet: #a281f0;
   --violet-soft: #1b1530;
+  --on-accent: #0b0d10;
 
   --shadow-color: 0 0 0;
 
@@ -121,17 +154,38 @@
   --color-rose-soft: var(--rose-soft);
   --color-violet: var(--violet);
   --color-violet-soft: var(--violet-soft);
+  --color-on-accent: var(--on-accent);
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-display), ui-serif, Georgia, serif;
-  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+  --color-stage: var(--stage);
+  --color-stage-2: var(--stage-2);
+  --color-stage-3: var(--stage-3);
+  --color-stage-ink: var(--stage-ink);
+  --color-stage-ink-2: var(--stage-ink-2);
+  --color-stage-ink-3: var(--stage-ink-3);
+  --color-stage-line: var(--stage-line);
+  --color-stage-line-strong: var(--stage-line-strong);
+  --color-stage-brand: var(--stage-brand);
+  --color-stage-brand-soft: var(--stage-brand-soft);
+  --color-stage-jade: var(--stage-jade);
+  --color-stage-ember: var(--stage-ember);
+  --color-stage-amber: var(--stage-amber);
+  --color-stage-rose: var(--stage-rose);
+  --color-stage-violet: var(--stage-violet);
 
-  --radius-xs: 0.375rem;
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.375rem;
-  --radius-2xl: 1.75rem;
+  /* One level of indirection: a theme block re-points --stack-* and --r-*, and
+     every utility follows. Previously --font-display mapped to next/font's own
+     --font-display, which was self-referential and silently killed the fallback
+     stack; the next/font vars are now namespaced --ff-*. */
+  --font-sans: var(--stack-sans);
+  --font-display: var(--stack-display);
+  --font-mono: var(--stack-mono);
+
+  --radius-xs: var(--r-xs);
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl);
+  --radius-2xl: var(--r-2xl);
 
   --shadow-e1: 0 1px 2px rgb(var(--shadow-color) / 0.05);
   --shadow-e2: 0 1px 2px rgb(var(--shadow-color) / 0.04), 0 4px 12px -2px rgb(var(--shadow-color) / 0.06);

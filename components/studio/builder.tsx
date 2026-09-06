@@ -170,7 +170,7 @@ export function CourseBuilder({ course }: { course: Course }) {
               setTitle(e.target.value);
               touch();
             }}
-            className="w-full max-w-2xl bg-transparent font-display text-[clamp(1.6rem,1.3rem+1.3vw,2.35rem)] leading-tight tracking-[-0.02em] text-ink focus:outline-none"
+            className="w-full max-w-2xl bg-transparent font-display text-[clamp(1.6rem,1.3rem+1.3vw,2.35rem)] leading-tight tracking-[var(--display-tracking)] text-ink focus:outline-none"
           />
           <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-ink-3 tnum">
             <Badge
@@ -623,7 +623,7 @@ export function CourseBuilder({ course }: { course: Course }) {
                       className={cn(
                         "mt-0.5 grid size-4 shrink-0 place-items-center rounded-full",
                         c.ok
-                          ? "bg-jade text-white"
+                          ? "bg-jade text-on-accent"
                           : "border border-line-strong text-ink-3",
                       )}
                     >

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "check:themes": "node scripts/check-themes.mjs"
   },
   "dependencies": {
     "framer-motion": "^13.2.0",

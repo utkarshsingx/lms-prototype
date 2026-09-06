@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Field, Input, Select, Switch } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
+import { ThemeGallery } from "@/components/theme/theme-picker";
 
 const INTEGRATIONS = [
   { name: "WhatsApp Business", detail: "Meta Cloud API · +91 98765 43210", on: true, icon: MessageSquareText, tone: "jade" },
@@ -31,7 +32,7 @@ const INTEGRATIONS = [
 
 export default function SettingsPage() {
   const [tab, setTab] = useState("workspace");
-  const { theme, setTheme } = useTheme();
+  const { mode, setMode, theme } = useTheme();
   const [flags, setFlags] = useState<Record<string, boolean>>({
     digest: true,
     deadline: true,
@@ -106,10 +107,10 @@ export default function SettingsPage() {
                 {(["light", "dark"] as const).map((t) => (
                   <button
                     key={t}
-                    onClick={() => setTheme(t)}
+                    onClick={() => setMode(t)}
                     className={
                       "flex items-center gap-3 rounded-[var(--radius-md)] border px-4 py-3 text-left transition-all " +
-                      (theme === t
+                      (mode === t
                         ? "border-brand bg-brand-soft shadow-[0_0_0_3px_var(--ring)]"
                         : "border-line bg-surface hover:border-line-strong")
                     }
@@ -117,13 +118,15 @@ export default function SettingsPage() {
                     <span
                       className="grid size-10 shrink-0 place-items-center rounded-[var(--radius-sm)] border border-line"
                       style={{
-                        background: t === "light" ? "#fbfaf8" : "#121419",
+                        background:
+                          t === "light" ? theme.light.paper : theme.dark.surface,
                       }}
                     >
                       <span
                         className="size-4 rounded-full"
                         style={{
-                          background: t === "light" ? "#2d5bff" : "#7093ff",
+                          background:
+                            t === "light" ? theme.light.brand : theme.dark.brand,
                         }}
                       />
                     </span>
@@ -137,6 +140,17 @@ export default function SettingsPage() {
                     </span>
                   </button>
                 ))}
+              </div>
+
+              <div className="mt-6 border-t border-line pt-5">
+                <p className="text-[11px] font-semibold tracking-[0.12em] text-ink-3 uppercase">
+                  Theme
+                </p>
+                <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-3">
+                  Changes colour, typography and geometry across the whole
+                  product. Light and dark are available in every theme.
+                </p>
+                <ThemeGallery className="mt-4" />
               </div>
             </div>
           </Card>

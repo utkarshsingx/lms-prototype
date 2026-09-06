@@ -43,11 +43,11 @@ export default function ProfilePage() {
   return (
     <div className="mx-auto max-w-[86rem] space-y-8">
       <Card className="overflow-hidden">
-        <div className="relative h-28 bg-surface-inv">
+        <div className="relative h-28 bg-stage">
           <div className="grain absolute inset-0" />
           <div
             className="absolute -top-16 right-10 size-64 rounded-full opacity-30 blur-3xl"
-            style={{ background: "radial-gradient(circle,#4f7bff,transparent 70%)" }}
+            style={{ background: "radial-gradient(circle,var(--stage-brand),transparent 70%)" }}
           />
         </div>
         <div className="flex flex-wrap items-end gap-5 px-6 pb-5">
@@ -59,7 +59,7 @@ export default function ProfilePage() {
             />
           </span>
           <div className="min-w-0 flex-1 pb-1">
-            <h1 className="font-display text-[2rem] leading-tight tracking-[-0.02em] text-ink">
+            <h1 className="font-display text-[2rem] leading-tight tracking-[var(--display-tracking)] text-ink">
               {currentUser.name}
             </h1>
             <p className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-ink-3">

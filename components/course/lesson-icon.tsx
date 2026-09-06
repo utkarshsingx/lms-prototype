@@ -49,7 +49,7 @@ export function LessonBullet({
 }) {
   if (state === "completed")
     return (
-      <span className="grid size-6 shrink-0 place-items-center rounded-full bg-jade text-white">
+      <span className="grid size-6 shrink-0 place-items-center rounded-full bg-jade text-on-accent">
         <Check className="size-3.5" strokeWidth={3} />
       </span>
     );

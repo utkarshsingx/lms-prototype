@@ -117,7 +117,7 @@ export default async function CoursePage({
               ) : null}
             </div>
 
-            <h1 className="mt-4 font-display text-[clamp(2rem,1.5rem+2vw,3.1rem)] leading-[1.04] tracking-[-0.022em] text-ink">
+            <h1 className="mt-4 font-display text-[clamp(2rem,1.5rem+2vw,3.1rem)] leading-[1.04] tracking-[var(--display-tracking)] text-ink">
               {course.title}
             </h1>
             <p className="mt-3 max-w-2xl text-[16px] leading-relaxed text-ink-2">

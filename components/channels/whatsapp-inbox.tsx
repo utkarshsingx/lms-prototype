@@ -87,7 +87,7 @@ export function WhatsappInbox() {
                       <p className="mt-1.5 flex items-center gap-1.5">
                         <Badge tone={statusTone[t.status]}>{t.status}</Badge>
                         {t.unread ? (
-                          <span className="grid size-4 place-items-center rounded-full bg-jade text-[10px] font-semibold text-white tnum">
+                          <span className="grid size-4 place-items-center rounded-full bg-jade text-[10px] font-semibold text-on-accent tnum">
                             {t.unread}
                           </span>
                         ) : null}
@@ -199,7 +199,7 @@ export function WhatsappInbox() {
             <Paperclip className="size-4 shrink-0 text-ink-3" />
             <button
               aria-label="Send"
-              className="grid size-8 shrink-0 place-items-center rounded-full bg-jade text-white"
+              className="grid size-8 shrink-0 place-items-center rounded-full bg-jade text-on-accent"
             >
               <Send className="size-3.5" />
             </button>

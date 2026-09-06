@@ -15,6 +15,8 @@ import {
 import { Mark } from "@/components/shell/brand";
 import { LinkButton } from "@/components/ui/button";
 import { LiveDot } from "@/components/ui/badge";
+import { ThemeMenu } from "@/components/theme/theme-picker";
+import { ThemeSection } from "@/components/theme/theme-section";
 
 export const metadata = {
   title: "Meridian — the learning platform",
@@ -91,6 +93,7 @@ export default function Landing() {
             {[
               ["Product", "#product"],
               ["Channels", "#channels"],
+              ["Themes", "#themes"],
               ["Catalog", "/catalog"],
             ].map(([label, href]) => (
               <Link
@@ -102,7 +105,8 @@ export default function Landing() {
               </Link>
             ))}
           </nav>
-          <div className="ml-auto flex items-center gap-2.5">
+          <div className="ml-auto flex items-center gap-1.5 sm:gap-2.5">
+            <ThemeMenu />
             <LinkButton href="/login" variant="ghost" size="sm">
               Sign in
             </LinkButton>
@@ -129,7 +133,7 @@ export default function Landing() {
               Chat, WhatsApp and voice, in one platform
             </span>
 
-            <h1 className="mt-7 font-display text-[clamp(2.6rem,1.8rem+4.4vw,5rem)] leading-[0.98] tracking-[-0.028em] text-ink">
+            <h1 className="mt-7 font-display text-[clamp(2.6rem,1.8rem+4.4vw,5rem)] leading-[0.98] tracking-[var(--display-tracking)] text-ink">
               A course catalogue
               <br />
               is not a career.
@@ -201,7 +205,7 @@ export default function Landing() {
 
                 <div className="p-5 sm:p-7">
                   <p className="text-[11px] text-ink-3">Saturday 5 September</p>
-                  <p className="mt-1.5 font-display text-[1.75rem] leading-tight tracking-[-0.02em] text-ink">
+                  <p className="mt-1.5 font-display text-[1.75rem] leading-tight tracking-[var(--display-tracking)] text-ink">
                     Good morning, Anaya
                   </p>
 
@@ -209,7 +213,7 @@ export default function Landing() {
                     <p className="text-[11px] font-semibold tracking-[0.12em] text-brand uppercase">
                       In progress
                     </p>
-                    <p className="mt-2 font-display text-[1.25rem] leading-snug tracking-[-0.015em] text-ink">
+                    <p className="mt-2 font-display text-[1.25rem] leading-snug tracking-[var(--display-tracking)] text-ink">
                       Lab: implement log replication
                     </p>
                     <div className="mt-3.5 flex items-center gap-3">
@@ -256,7 +260,7 @@ export default function Landing() {
             ["19h", "median grading turnaround"],
           ].map(([v, l]) => (
             <div key={l}>
-              <p className="font-display text-[2.4rem] leading-none tracking-[-0.02em] text-ink tnum">
+              <p className="font-display text-[2.4rem] leading-none tracking-[var(--display-tracking)] text-ink tnum">
                 {v}
               </p>
               <p className="mt-2.5 text-[13px] leading-snug text-ink-3">{l}</p>
@@ -272,7 +276,7 @@ export default function Landing() {
             <p className="text-[11px] font-semibold tracking-[0.14em] text-ink-3 uppercase">
               The platform
             </p>
-            <h2 className="mt-3.5 font-display text-[clamp(2rem,1.5rem+2.2vw,3.2rem)] leading-[1.06] tracking-[-0.022em] text-ink">
+            <h2 className="mt-3.5 font-display text-[clamp(2rem,1.5rem+2.2vw,3.2rem)] leading-[1.06] tracking-[var(--display-tracking)] text-ink">
               Four things a learning platform owes you
             </h2>
           </div>
@@ -315,27 +319,29 @@ export default function Landing() {
         </div>
       </section>
 
+      <ThemeSection />
+
       {/* Channels — dark */}
-      <section id="channels" className="relative overflow-hidden bg-[#111318]">
+      <section id="channels" className="relative overflow-hidden border-y border-stage-line bg-stage">
         <div className="grain absolute inset-0" />
         <div
           className="pointer-events-none absolute -top-32 right-0 size-[34rem] rounded-full opacity-25 blur-3xl"
-          style={{ background: "radial-gradient(circle,#4f7bff,transparent 70%)" }}
+          style={{ background: "radial-gradient(circle,var(--stage-brand),transparent 70%)" }}
         />
         <div
           className="pointer-events-none absolute -bottom-40 -left-20 size-[30rem] rounded-full opacity-20 blur-3xl"
-          style={{ background: "radial-gradient(circle,#d6520a,transparent 70%)" }}
+          style={{ background: "radial-gradient(circle,var(--stage-ember),transparent 70%)" }}
         />
 
         <div className="relative mx-auto max-w-[80rem] px-5 py-20 sm:px-8 sm:py-28">
           <div className="max-w-2xl">
-            <p className="text-[11px] font-semibold tracking-[0.14em] text-white/40 uppercase">
+            <p className="text-[11px] font-semibold tracking-[0.14em] text-stage-ink/40 uppercase">
               Reach
             </p>
-            <h2 className="mt-3.5 font-display text-[clamp(2rem,1.5rem+2.2vw,3.2rem)] leading-[1.06] tracking-[-0.022em] text-white">
+            <h2 className="mt-3.5 font-display text-[clamp(2rem,1.5rem+2.2vw,3.2rem)] leading-[1.06] tracking-[var(--display-tracking)] text-stage-ink">
               The learners who stall are not reading your email
             </h2>
-            <p className="mt-5 text-[15.5px] leading-relaxed text-white/55">
+            <p className="mt-5 text-[15.5px] leading-relaxed text-stage-ink/55">
               One assistant, three channels, the same record behind all of them.
               It acts where it can, and it stops where a person has to decide.
             </p>
@@ -345,33 +351,33 @@ export default function Landing() {
             {CHANNELS.map((c) => (
               <div
                 key={c.title}
-                className="rounded-[var(--radius-xl)] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-sm"
+                className="rounded-[var(--radius-xl)] border border-stage-ink/10 bg-stage-ink/[0.04] p-6 backdrop-blur-sm"
               >
-                <span className="grid size-10 place-items-center rounded-[var(--radius-md)] border border-white/12 bg-white/[0.06] text-white/80">
+                <span className="grid size-10 place-items-center rounded-[var(--radius-md)] border border-stage-ink/12 bg-stage-ink/[0.06] text-stage-ink/80">
                   <c.icon className="size-4.5" />
                 </span>
-                <p className="mt-5 font-display text-[2.4rem] leading-none tracking-[-0.02em] text-white tnum">
+                <p className="mt-5 font-display text-[2.4rem] leading-none tracking-[var(--display-tracking)] text-stage-ink tnum">
                   {c.stat}
                 </p>
-                <p className="mt-2 text-[12.5px] text-white/45">{c.label}</p>
-                <h3 className="mt-5 text-[16px] font-semibold tracking-[-0.01em] text-white">
+                <p className="mt-2 text-[12.5px] text-stage-ink/45">{c.label}</p>
+                <h3 className="mt-5 text-[16px] font-semibold tracking-[-0.01em] text-stage-ink">
                   {c.title}
                 </h3>
-                <p className="mt-2.5 text-[13.5px] leading-relaxed text-white/55">
+                <p className="mt-2.5 text-[13.5px] leading-relaxed text-stage-ink/55">
                   {c.body}
                 </p>
               </div>
             ))}
           </div>
 
-          <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-white/10 pt-8 text-[12.5px] text-white/40">
+          <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-stage-ink/10 pt-8 text-[12.5px] text-stage-ink/40">
             {[
               "Consent logged before any outbound contact",
               "Calling window in the learner's own timezone",
               "Grades and account decisions always escalate",
             ].map((x) => (
               <span key={x} className="inline-flex items-center gap-2">
-                <Check className="size-3.5 text-[#45b892]" strokeWidth={2.5} />
+                <Check className="size-3.5 text-stage-jade" strokeWidth={2.5} />
                 {x}
               </span>
             ))}
@@ -382,7 +388,7 @@ export default function Landing() {
       {/* CTA */}
       <section className="border-b border-line">
         <div className="mx-auto max-w-[80rem] px-5 py-20 text-center sm:px-8 sm:py-24">
-          <h2 className="mx-auto max-w-2xl font-display text-[clamp(2rem,1.5rem+2.2vw,3.2rem)] leading-[1.06] tracking-[-0.022em] text-ink">
+          <h2 className="mx-auto max-w-2xl font-display text-[clamp(2rem,1.5rem+2.2vw,3.2rem)] leading-[1.06] tracking-[var(--display-tracking)] text-ink">
             Have a look around
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-[15.5px] leading-relaxed text-ink-2">

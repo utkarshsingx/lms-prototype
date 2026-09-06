@@ -107,7 +107,7 @@ export function AssessmentRunner({
               </Badge>
             ) : null}
           </div>
-          <h1 className="mt-3.5 font-display text-[clamp(1.9rem,1.5rem+1.8vw,2.8rem)] leading-[1.06] tracking-[-0.02em] text-ink">
+          <h1 className="mt-3.5 font-display text-[clamp(1.9rem,1.5rem+1.8vw,2.8rem)] leading-[1.06] tracking-[var(--display-tracking)] text-ink">
             {assessment.title}
           </h1>
           <p className="mt-3 text-[15px] leading-relaxed text-ink-2">
@@ -271,7 +271,7 @@ export function AssessmentRunner({
               >
                 {passed ? "Passed" : "Not passed"}
               </p>
-              <h1 className="mt-2 font-display text-[2rem] leading-tight tracking-[-0.02em] text-ink tnum">
+              <h1 className="mt-2 font-display text-[2rem] leading-tight tracking-[var(--display-tracking)] text-ink tnum">
                 {scored.got} of {scored.max} points
               </h1>
               <p className="mt-1.5 text-[13.5px] text-ink-2 tnum">
@@ -297,8 +297,8 @@ export function AssessmentRunner({
                       written
                         ? "bg-amber-soft text-amber"
                         : ok
-                          ? "bg-jade text-white"
-                          : "bg-rose text-white",
+                          ? "bg-jade text-on-accent"
+                          : "bg-rose text-on-accent",
                     )}
                   >
                     {written ? (
@@ -635,7 +635,7 @@ function QuestionInput({
           onChange={(e) => onChange(e.target.value)}
           spellCheck={false}
           rows={12}
-          className="w-full resize-y bg-[#0d0f13] p-4 font-mono text-[12.5px] leading-[1.7] text-[#e6e9ef] focus:outline-none"
+          className="w-full resize-y bg-stage p-4 font-mono text-[12.5px] leading-[1.7] text-stage-ink focus:outline-none"
         />
       </div>
     );

@@ -53,12 +53,12 @@ export function VideoViewer({ lesson }: { lesson: Lesson }) {
   return (
     <div className={frame}>
       {/* stage */}
-      <div className="relative aspect-video bg-[#0d0f13]">
+      <div className="relative aspect-video bg-stage">
         <div
           className="absolute inset-0 opacity-70"
           style={{
             background:
-              "radial-gradient(120% 90% at 50% 0%, #1d2740 0%, #0d0f13 62%)",
+              "radial-gradient(120% 90% at 50% 0%, var(--stage-2) 0%, var(--stage) 62%)",
           }}
         />
         <div className="grain absolute inset-0 opacity-40" />
@@ -82,14 +82,14 @@ export function VideoViewer({ lesson }: { lesson: Lesson }) {
                   cx={x}
                   cy={y}
                   r="21"
-                  fill={i < 3 ? "#1f3a6b" : "#171a21"}
-                  stroke={i < 3 ? "#7093ff" : "#3a4150"}
+                  fill={i < 3 ? "var(--stage-brand-soft)" : "var(--stage-2)"}
+                  stroke={i < 3 ? "var(--stage-brand)" : "var(--stage-line-strong)"}
                 />
                 <text
                   x={x}
                   y={y + 4}
                   textAnchor="middle"
-                  fill={i < 3 ? "#cfdcff" : "#6c737e"}
+                  fill={i < 3 ? "var(--stage-brand)" : "var(--stage-ink-3)"}
                   fontSize="11"
                   fontFamily="system-ui"
                 >
@@ -99,15 +99,15 @@ export function VideoViewer({ lesson }: { lesson: Lesson }) {
             ))}
             <path
               d="M200 61 L300 75 M300 117 L262 157 M262 178 L138 178 M138 157 L100 117 M100 75 L200 61"
-              stroke="#3a4150"
+              stroke="var(--stage-line-strong)"
             />
-            <path d="M200 61 L300 75 M300 117 L262 157" stroke="#7093ff" strokeWidth="2" />
+            <path d="M200 61 L300 75 M300 117 L262 157" stroke="var(--stage-brand)" strokeWidth="2" />
           </g>
           <text
             x="200"
             y="212"
             textAnchor="middle"
-            fill="#7093ff"
+            fill="var(--stage-brand)"
             fontSize="11"
             fontFamily="system-ui"
           >
@@ -121,24 +121,24 @@ export function VideoViewer({ lesson }: { lesson: Lesson }) {
             className="group absolute inset-0 grid place-items-center"
             aria-label="Play"
           >
-            <span className="grid size-16 place-items-center rounded-full bg-white/95 text-[#0d0f13] shadow-2xl transition-transform duration-200 ease-[var(--ease-spring)] group-hover:scale-108">
+            <span className="grid size-16 place-items-center rounded-full bg-stage-ink/95 text-stage shadow-2xl transition-transform duration-200 ease-[var(--ease-spring)] group-hover:scale-108">
               <Play className="ml-1 size-6 fill-current" />
             </span>
           </button>
         ) : null}
 
         {captions ? (
-          <p className="absolute inset-x-0 bottom-16 mx-auto max-w-lg rounded-[var(--radius-sm)] bg-black/65 px-3 py-1.5 text-center text-[13px] leading-snug text-white/95">
+          <p className="absolute inset-x-0 bottom-16 mx-auto max-w-lg rounded-[var(--radius-sm)] bg-stage/65 px-3 py-1.5 text-center text-[13px] leading-snug text-stage-ink/95">
             …so any two quorums have to overlap. That is the whole idea, and
             everything else is bookkeeping.
           </p>
         ) : null}
 
         {/* controls */}
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-4 pt-10 pb-3">
-          <div className="group relative mb-2.5 h-1 cursor-pointer rounded-full bg-white/20">
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-stage/85 to-transparent px-4 pt-10 pb-3">
+          <div className="group relative mb-2.5 h-1 cursor-pointer rounded-full bg-stage-ink/20">
             <span
-              className="absolute inset-y-0 left-0 rounded-full bg-white/30"
+              className="absolute inset-y-0 left-0 rounded-full bg-stage-ink/30"
               style={{ width: "72%" }}
             />
             <span
@@ -153,17 +153,17 @@ export function VideoViewer({ lesson }: { lesson: Lesson }) {
               <span
                 key={c.at}
                 title={c.label}
-                className="absolute top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-white/70"
+                className="absolute top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-stage-ink/70"
                 style={{ left: `${c.at}%` }}
               />
             ))}
           </div>
 
-          <div className="flex items-center gap-2 text-white/85">
+          <div className="flex items-center gap-2 text-stage-ink/85">
             <button
               onClick={() => setPlaying((p) => !p)}
               aria-label={playing ? "Pause" : "Play"}
-              className="grid size-8 place-items-center rounded-full hover:bg-white/12"
+              className="grid size-8 place-items-center rounded-full hover:bg-stage-ink/12"
             >
               {playing ? (
                 <Pause className="size-4 fill-current" />
@@ -174,14 +174,14 @@ export function VideoViewer({ lesson }: { lesson: Lesson }) {
             <button
               onClick={() => setPos((p) => Math.max(0, p - 6))}
               aria-label="Back 10 seconds"
-              className="grid size-8 place-items-center rounded-full hover:bg-white/12"
+              className="grid size-8 place-items-center rounded-full hover:bg-stage-ink/12"
             >
               <RotateCcw className="size-4" />
             </button>
             <button
               onClick={() => setPos((p) => Math.min(100, p + 6))}
               aria-label="Forward 10 seconds"
-              className="grid size-8 place-items-center rounded-full hover:bg-white/12"
+              className="grid size-8 place-items-center rounded-full hover:bg-stage-ink/12"
             >
               <RotateCw className="size-4" />
             </button>
@@ -192,7 +192,7 @@ export function VideoViewer({ lesson }: { lesson: Lesson }) {
             <span className="ml-auto flex items-center gap-1">
               <button
                 onClick={() => setSpeed((s) => (s >= 2 ? 0.75 : s + 0.25))}
-                className="flex items-center gap-1 rounded-full px-2 py-1 text-[12px] font-medium hover:bg-white/12 tnum"
+                className="flex items-center gap-1 rounded-full px-2 py-1 text-[12px] font-medium hover:bg-stage-ink/12 tnum"
               >
                 <Gauge className="size-3.5" />
                 {speed}×
@@ -201,7 +201,7 @@ export function VideoViewer({ lesson }: { lesson: Lesson }) {
                 onClick={() => setCaptions((c) => !c)}
                 aria-label="Captions"
                 className={cn(
-                  "grid size-8 place-items-center rounded-full hover:bg-white/12",
+                  "grid size-8 place-items-center rounded-full hover:bg-stage-ink/12",
                   captions && "text-brand",
                 )}
               >
@@ -209,7 +209,7 @@ export function VideoViewer({ lesson }: { lesson: Lesson }) {
               </button>
               <button
                 aria-label="Fullscreen"
-                className="grid size-8 place-items-center rounded-full hover:bg-white/12"
+                className="grid size-8 place-items-center rounded-full hover:bg-stage-ink/12"
               >
                 <Maximize2 className="size-4" />
               </button>
@@ -248,7 +248,7 @@ export function ArticleViewer({ lesson }: { lesson: Lesson }) {
       <p className="text-[11px] font-semibold tracking-[0.14em] text-ink-3 uppercase">
         Reading · {lesson.minutes} min
       </p>
-      <h2 className="mt-3 font-display text-[clamp(1.6rem,1.3rem+1.2vw,2.25rem)] leading-[1.12] tracking-[-0.02em] text-ink">
+      <h2 className="mt-3 font-display text-[clamp(1.6rem,1.3rem+1.2vw,2.25rem)] leading-[1.12] tracking-[var(--display-tracking)] text-ink">
         {lesson.title}
       </h2>
 
@@ -376,7 +376,7 @@ export function PdfViewer({ lesson }: { lesson: Lesson }) {
             <p className="font-mono text-[10px] tracking-[0.14em] text-neutral-400 uppercase">
               Northwind Learning · page {page}
             </p>
-            <h3 className="mt-5 font-display text-[1.5rem] leading-tight tracking-[-0.015em] text-neutral-900">
+            <h3 className="mt-5 font-display text-[1.5rem] leading-tight tracking-[var(--display-tracking)] text-neutral-900">
               Quorum sizing cheat sheet
             </h3>
             <p className="mt-3 text-[12.5px] leading-relaxed text-neutral-600">
@@ -441,7 +441,7 @@ export function SlidesViewer({ lesson }: { lesson: Lesson }) {
             <p className="text-[11px] font-semibold tracking-[0.16em] text-ink-inv/45 uppercase">
               {lesson.title}
             </p>
-            <h3 className="mt-5 font-display text-[clamp(1.5rem,1rem+2.4vw,2.6rem)] leading-[1.1] tracking-[-0.02em] text-ink-inv">
+            <h3 className="mt-5 font-display text-[clamp(1.5rem,1rem+2.4vw,2.6rem)] leading-[1.1] tracking-[var(--display-tracking)] text-ink-inv">
               {slides[i].t}
             </h3>
             <p className="mt-4 text-[14.5px] text-ink-inv/55">{slides[i].s}</p>
@@ -518,7 +518,7 @@ export function PackageViewer({ lesson }: { lesson: Lesson }) {
                 <p className="text-[11px] font-semibold tracking-[0.14em] text-ink-3 uppercase">
                   Interaction 3 of 8
                 </p>
-                <h3 className="mt-3 font-display text-[1.5rem] leading-tight tracking-[-0.015em] text-ink">
+                <h3 className="mt-3 font-display text-[1.5rem] leading-tight tracking-[var(--display-tracking)] text-ink">
                   A customer asks you to delete their support history
                 </h3>
                 <p className="mt-2.5 text-[13.5px] leading-relaxed text-ink-2">
@@ -634,7 +634,7 @@ export function LabViewer({ lesson }: { lesson: Lesson }) {
             Estimated {lesson.minutes} minutes
           </span>
         </div>
-        <h2 className="mt-3 font-display text-[1.6rem] leading-tight tracking-[-0.018em] text-ink">
+        <h2 className="mt-3 font-display text-[1.6rem] leading-tight tracking-[var(--display-tracking)] text-ink">
           {lesson.title}
         </h2>
         <div className="mt-3.5 max-w-[62ch] space-y-3 text-[14px] leading-relaxed text-ink-2">
@@ -674,24 +674,24 @@ export function LabViewer({ lesson }: { lesson: Lesson }) {
           </Button>
         </div>
 
-        <pre className="scrollbar-slim overflow-x-auto bg-[#0d0f13] p-5 font-mono text-[12.5px] leading-[1.7]">
+        <pre className="scrollbar-slim overflow-x-auto bg-stage p-5 font-mono text-[12.5px] leading-[1.7]">
           <code>
             {[
-              ["func (n *Node) canGrantVote(", "#e6e9ef"],
-              ["\tcandTerm, candLastIdx, candLastTerm int,", "#a5acb7"],
-              [") bool {", "#e6e9ef"],
-              ["\tif candTerm < n.currentTerm {", "#7093ff"],
-              ["\t\treturn false", "#f0803c"],
-              ["\t}", "#7093ff"],
-              ["\tmyLastTerm := n.log.LastTerm()", "#e6e9ef"],
-              ["\tif candLastTerm != myLastTerm {", "#7093ff"],
-              ["\t\treturn candLastTerm > myLastTerm", "#45b892"],
-              ["\t}", "#7093ff"],
-              ["\treturn candLastIdx >= n.log.LastIndex()", "#45b892"],
-              ["}", "#e6e9ef"],
+              ["func (n *Node) canGrantVote(", "var(--stage-ink)"],
+              ["\tcandTerm, candLastIdx, candLastTerm int,", "var(--stage-ink-2)"],
+              [") bool {", "var(--stage-ink)"],
+              ["\tif candTerm < n.currentTerm {", "var(--stage-brand)"],
+              ["\t\treturn false", "var(--stage-ember)"],
+              ["\t}", "var(--stage-brand)"],
+              ["\tmyLastTerm := n.log.LastTerm()", "var(--stage-ink)"],
+              ["\tif candLastTerm != myLastTerm {", "var(--stage-brand)"],
+              ["\t\treturn candLastTerm > myLastTerm", "var(--stage-jade)"],
+              ["\t}", "var(--stage-brand)"],
+              ["\treturn candLastIdx >= n.log.LastIndex()", "var(--stage-jade)"],
+              ["}", "var(--stage-ink)"],
             ].map(([line, color], i) => (
               <span key={i} className="flex">
-                <span className="mr-4 inline-block w-5 shrink-0 text-right text-[#4a515c] select-none">
+                <span className="mr-4 inline-block w-5 shrink-0 text-right text-stage-ink-3 select-none">
                   {i + 1}
                 </span>
                 <span style={{ color: color as string }}>{line}</span>
@@ -737,7 +737,7 @@ export function AssignmentViewer({
             1 attempt · graded against a rubric
           </span>
         </div>
-        <h2 className="mt-3 font-display text-[1.6rem] leading-tight tracking-[-0.018em] text-ink">
+        <h2 className="mt-3 font-display text-[1.6rem] leading-tight tracking-[var(--display-tracking)] text-ink">
           {lesson.title}
         </h2>
         <p className="mt-3 max-w-[62ch] text-[14px] leading-relaxed text-ink-2">
@@ -811,13 +811,13 @@ export function LiveViewer({ lesson }: { lesson: Lesson }) {
         <div className="grain absolute inset-0" />
         <div
           className="absolute -top-24 -right-16 size-80 rounded-full opacity-25 blur-3xl"
-          style={{ background: "radial-gradient(circle,#d6520a,transparent 70%)" }}
+          style={{ background: "radial-gradient(circle,var(--stage-ember),transparent 70%)" }}
         />
         <div className="relative">
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-3 py-1 text-[11.5px] font-medium text-ink-inv/80">
+          <span className="inline-flex items-center gap-2 rounded-full border border-stage-ink/15 bg-stage-ink/8 px-3 py-1 text-[11.5px] font-medium text-ink-inv/80">
             <LiveDot /> Starts tomorrow, 16:00 IST
           </span>
-          <h2 className="mt-5 max-w-lg font-display text-[clamp(1.6rem,1.2rem+1.5vw,2.4rem)] leading-[1.08] tracking-[-0.02em] text-ink-inv">
+          <h2 className="mt-5 max-w-lg font-display text-[clamp(1.6rem,1.2rem+1.5vw,2.4rem)] leading-[1.08] tracking-[var(--display-tracking)] text-ink-inv">
             {lesson.title}
           </h2>
           <p className="mt-3 max-w-md text-[14px] leading-relaxed text-ink-inv/55">
