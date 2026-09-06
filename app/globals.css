@@ -70,6 +70,7 @@
   --stack-sans: var(--ff-inter), ui-sans-serif, system-ui, sans-serif;
   --stack-mono: var(--ff-jetbrains), ui-monospace, SFMono-Regular, monospace;
   --display-tracking: -0.02em;
+  --display-weight: 400;
 
   --r-xs: 0.375rem;
   --r-sm: 0.5rem;
@@ -77,6 +78,8 @@
   --r-lg: 1rem;
   --r-xl: 1.375rem;
   --r-2xl: 1.75rem;
+  --r-pill: 9999px;
+  --font-features: "cv11", "ss01";
 
   /* effects */
   --ring: color-mix(in oklab, var(--brand) 35%, transparent);
@@ -186,6 +189,7 @@
   --radius-lg: var(--r-lg);
   --radius-xl: var(--r-xl);
   --radius-2xl: var(--r-2xl);
+  --radius-pill: var(--r-pill);
 
   --shadow-e1: 0 1px 2px rgb(var(--shadow-color) / 0.05);
   --shadow-e2: 0 1px 2px rgb(var(--shadow-color) / 0.04), 0 4px 12px -2px rgb(var(--shadow-color) / 0.06);
@@ -210,8 +214,12 @@
     background: var(--paper);
     color: var(--ink);
     font-family: var(--font-sans);
-    font-feature-settings: "cv11", "ss01";
+    font-feature-settings: var(--font-features);
     font-variant-ligatures: contextual;
+    /* Several display faces ship one weight only. Synthetic bold fattens the
+       strokes without changing advance widths, so it reads as mud rather than
+       emphasis; refuse it and let the real weights do the work. */
+    font-synthesis: none;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -241,6 +249,12 @@
      still wins where an item genuinely must not shrink. */
   :where(.grid) > * {
     min-width: 0;
+  }
+
+  /* Display headings take their weight from the theme. Declared in @layer base
+     so an explicit font-* utility still wins. */
+  .font-display {
+    font-weight: var(--display-weight);
   }
 
   /* numerals line up in tables and stat blocks */
