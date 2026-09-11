@@ -1,14 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   Captions,
+  Check,
   ChevronLeft,
   ChevronRight,
+  CircleCheck,
+  CircleX,
   Download,
   ExternalLink,
+  Eye,
   FileText,
   Gauge,
+  Lightbulb,
+  LoaderCircle,
+  Lock,
   Maximize2,
   Package,
   Pause,
@@ -16,7 +23,9 @@ import {
   Radio,
   RotateCcw,
   RotateCw,
+  Send,
   Terminal,
+  TriangleAlert,
   Upload,
   Volume2,
 } from "lucide-react";
@@ -25,6 +34,7 @@ import { cn } from "@/lib/cn";
 import { Badge, LiveDot } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataRow } from "@/components/ui/misc";
+import { Segmented } from "@/components/ui/tabs";
 
 const frame =
   "relative overflow-hidden rounded-[var(--radius-lg)] border border-line bg-surface shadow-[var(--shadow-e2)]";
@@ -623,94 +633,678 @@ export function PackageViewer({ lesson }: { lesson: Lesson }) {
 
 /* ------------------------------------------------------------------ lab */
 
+/* The guided lab grades what the learner typed, not a canned transcript. A
+   prototype has no Go toolchain, so each test is a structural check on the
+   editor text with comments stripped and whitespace collapsed. The starter
+   fails all three, the reference passes all three, and comparing the index
+   before the term fails the ordering test, as the real suite would. */
+
+const LAB_STARTER = `package raft
+
+func (n *Node) canGrantVote(candTerm, candLastIdx, candLastTerm int) bool {
+\tif candTerm < n.currentTerm {
+\t\treturn false
+\t}
+\t// TODO: implement the log up-to-date check
+\treturn false
+}
+`;
+
+const LAB_SOLUTION = `package raft
+
+func (n *Node) canGrantVote(candTerm, candLastIdx, candLastTerm int) bool {
+\tif candTerm < n.currentTerm {
+\t\treturn false
+\t}
+\tmyLastTerm := n.log.LastTerm()
+\tif candLastTerm != myLastTerm {
+\t\treturn candLastTerm > myLastTerm
+\t}
+\treturn candLastIdx >= n.log.LastIndex()
+}
+`;
+
+const LAB_TEST_FILE = `package raft
+
+import "testing"
+
+// Every log below ends at index 4. Only the terms in it change.
+
+func TestVoteGrantedHigherTerm(t *testing.T) {
+\tn := newNode(5, logOf(1, 1, 2, 2))
+\tif !n.canGrantVote(5, 2, 3) {
+\t\tt.Fatal("denied a candidate whose last term is higher")
+\t}
+}
+
+func TestVoteDeniedShorterLog(t *testing.T) {
+\tn := newNode(5, logOf(1, 2, 2, 2))
+\tif n.canGrantVote(5, 3, 2) {
+\t\tt.Fatal("granted a vote to a candidate with a shorter log")
+\t}
+\tif !n.canGrantVote(5, 4, 2) {
+\t\tt.Fatal("denied a candidate whose log is exactly as long")
+\t}
+}
+
+func TestVoteTieBrokenByIndex(t *testing.T) {
+\tn := newNode(5, logOf(1, 1, 3, 3))
+\tif n.canGrantVote(5, 9, 2) {
+\t\tt.Fatal("a longer log with a lower last term won the vote")
+\t}
+\tif !n.canGrantVote(5, 5, 3) {
+\t\tt.Fatal("equal last terms and a longer log, yet the vote was denied")
+\t}
+}`;
+
+type LabTestName =
+  | "TestVoteGrantedHigherTerm"
+  | "TestVoteDeniedShorterLog"
+  | "TestVoteTieBrokenByIndex";
+
+type LabTest = { name: LabTestName; secs: string; pass: boolean; failure?: string };
+type LabReport = { tests: LabTest[]; buildError?: string };
+
+const LAB_TESTS: { name: LabTestName; secs: string }[] = [
+  { name: "TestVoteGrantedHigherTerm", secs: "0.02s" },
+  { name: "TestVoteDeniedShorterLog", secs: "0.01s" },
+  { name: "TestVoteTieBrokenByIndex", secs: "0.01s" },
+];
+
+/** A t.Fatal message prefixed with its line, the way go test prints it. */
+function labFatal(msg: string) {
+  const line = LAB_TEST_FILE.split("\n").findIndex((l) => l.includes(msg)) + 1;
+  return `raft_test.go:${line}: ${msg}`;
+}
+
+function normaliseGo(src: string) {
+  return src
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/\/\/[^\n]*/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** The body of canGrantVote, or null when it is missing or never closes. */
+function voteBody(code: string) {
+  const sig = code.search(/\bfunc\s*\([^)]*\)\s*canGrantVote\s*\(/);
+  const open = sig < 0 ? -1 : code.indexOf("{", sig);
+  if (open < 0) return null;
+  let depth = 0;
+  for (let i = open; i < code.length; i++) {
+    if (code[i] === "{") depth++;
+    else if (code[i] === "}" && --depth === 0) return code.slice(open + 1, i).trim();
+  }
+  return null;
+}
+
+/** The node's own last term or index: the call itself, or a local holding it. */
+function ownRef(body: string, method: "LastTerm" | "LastIndex", names: string[]) {
+  const call = `\\w+\\.log\\.${method}\\(\\)`;
+  const assigned = new RegExp(`\\b(\\w+)(?:\\s+int)?\\s*:?=\\s*${call}`, "g");
+  const locals = Array.from(body.matchAll(assigned), (m) => m[1]);
+  return `(?:${call}|${[...names, ...locals].map((n) => `\\b${n}\\b`).join("|")})`;
+}
+
+function gradeLab(src: string): LabReport {
+  const code = normaliseGo(src);
+  const body = voteBody(code);
+  if (body === null) {
+    return {
+      tests: [],
+      buildError: code.includes("canGrantVote")
+        ? "./raft.go: syntax error: unexpected EOF, expected }"
+        : "./raft.go: n.canGrantVote undefined",
+    };
+  }
+
+  const op = "(?:==|!=|>=|<=|>|<)";
+  const term = ownRef(body, "LastTerm", ["myLastTerm"]);
+  const index = ownRef(body, "LastIndex", ["myLastIdx", "myLastIndex"]);
+  const deny = "\\)?\\s*\\{\\s*return false\\b";
+
+  // Any comparison of the two last terms counts. Whether it runs early
+  // enough is the ordering test's job.
+  const termAt = body.search(
+    new RegExp(`\\bcandLastTerm\\s*${op}\\s*${term}|${term}\\s*${op}\\s*candLastTerm\\b`),
+  );
+  // The index must grant on >= or deny on <. A strict > turns away an
+  // equally long log, which is its own bug.
+  const indexAt = body.search(
+    new RegExp(
+      [
+        `\\bcandLastIdx\\s*>=\\s*${index}`,
+        `${index}\\s*<=\\s*candLastIdx\\b`,
+        `\\bcandLastIdx\\s*<\\s*${index}${deny}`,
+        `${index}\\s*>\\s*candLastIdx\\b${deny}`,
+      ].join("|"),
+    ),
+  );
+  const endsDenying = /\breturn false;?$/.test(body);
+  const indexFirst = indexAt >= 0 && (termAt < 0 || indexAt < termAt);
+
+  const pass: Record<LabTestName, boolean> = {
+    TestVoteGrantedHigherTerm: termAt >= 0,
+    TestVoteDeniedShorterLog: indexAt >= 0,
+    TestVoteTieBrokenByIndex: termAt >= 0 && indexAt > termAt && !endsDenying,
+  };
+  const failure: Record<LabTestName, string> = {
+    TestVoteGrantedHigherTerm: labFatal("denied a candidate whose last term is higher"),
+    TestVoteDeniedShorterLog: labFatal("denied a candidate whose log is exactly as long"),
+    TestVoteTieBrokenByIndex: labFatal(
+      indexFirst
+        ? "a longer log with a lower last term won the vote"
+        : "equal last terms and a longer log, yet the vote was denied",
+    ),
+  };
+  return {
+    tests: LAB_TESTS.map((t) => ({ ...t, pass: pass[t.name], failure: failure[t.name] })),
+  };
+}
+
+const LAB_STEPS: { test: LabTestName; title: string; detail: string }[] = [
+  {
+    test: "TestVoteGrantedHigherTerm",
+    title: "Compare last log terms",
+    detail: "A candidate whose last term is higher wins, however short its log.",
+  },
+  {
+    test: "TestVoteDeniedShorterLog",
+    title: "Use the index only on a tie",
+    detail: "With equal terms, grant only if its log is at least as long as yours.",
+  },
+  {
+    test: "TestVoteTieBrokenByIndex",
+    title: "Check the term first",
+    detail: "Term before index, with no placeholder return false left at the end.",
+  },
+];
+
+/* Backticks mark inline code; LabHints renders them as <code>. */
+const LAB_HINTS = [
+  "Read your own last term with `n.log.LastTerm()` and compare it with `candLastTerm`. If they differ, the higher term wins outright.",
+  "Only equal terms reach the index. Grant when `candLastIdx >= n.log.LastIndex()`, so a log exactly as long as yours still gets the vote.",
+  "Order is the whole exercise: `if candLastTerm != myLastTerm { return candLastTerm > myLastTerm }`, then return the index check.",
+];
+
+const LAB_PANES = [
+  { id: "yours", label: "Your result" },
+  { id: "expected", label: "Expected result" },
+];
+
+const LAB_EXPECTED: LabReport = { tests: LAB_TESTS.map((t) => ({ ...t, pass: true })) };
+
 export function LabViewer({ lesson }: { lesson: Lesson }) {
-  const [ran, setRan] = useState(false);
+  // Keyed by lesson so moving to the next lab starts a clean attempt instead
+  // of inheriting this one's code, hints and practice flag.
+  return <GuidedLab key={lesson.id} lesson={lesson} />;
+}
+
+function GuidedLab({ lesson }: { lesson: Lesson }) {
+  const [file, setFile] = useState<"raft.go" | "raft_test.go">("raft.go");
+  const [code, setCode] = useState(LAB_STARTER);
+  const [queued, setQueued] = useState<string | null>(null);
+  const [run, setRun] = useState<{ code: string; report: LabReport } | null>(null);
+  const [pane, setPane] = useState("yours");
+  const [hints, setHints] = useState(0);
+  const [confirming, setConfirming] = useState(false);
+  const [practice, setPractice] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const escaped = useRef(false);
+  const helpId = useId();
+
+  // A run grades the code as it was when Run was pressed, so typing during
+  // the delay changes nothing. Clearing `queued` (reset, show answer,
+  // unmount) cancels the timer.
+  useEffect(() => {
+    if (queued === null) return;
+    const t = window.setTimeout(() => {
+      setRun({ code: queued, report: gradeLab(queued) });
+      setQueued(null);
+    }, 600);
+    return () => window.clearTimeout(t);
+  }, [queued]);
+
+  const running = queued !== null;
+  const report = run?.report;
+  const total = LAB_TESTS.length;
+  const passing = report?.tests.filter((t) => t.pass).length ?? 0;
+  // Green tests unlock submit only for the code they actually ran against.
+  const stale = run !== null && run.code !== code;
+  const canSubmit = passing === total && !stale && !running && !submitted;
+  const lines = code.split("\n").length;
+  const passed = (test: LabTestName) =>
+    report?.tests.some((t) => t.name === test && t.pass) ?? false;
+
+  const clearRun = () => {
+    setRun(null);
+    setQueued(null);
+    setConfirming(false);
+    setFile("raft.go");
+    setPane("yours");
+  };
+  const reset = () => {
+    setCode(LAB_STARTER);
+    clearRun();
+  };
+  const showAnswer = () => {
+    setCode(LAB_SOLUTION);
+    setPractice(true);
+    clearRun();
+  };
+
+  // Tab indents. Escape first hands Tab back to the browser so keyboard users
+  // are never trapped in the editor.
+  const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Tab" && !e.shiftKey && !escaped.current && !submitted) {
+      e.preventDefault();
+      const el = e.currentTarget;
+      el.setRangeText("\t", el.selectionStart, el.selectionEnd, "end");
+      setCode(el.value);
+    }
+    escaped.current = e.key === "Escape";
+  };
+
   return (
-    <div className="space-y-4">
-      <div className={cn(frame, "p-5 sm:p-6")}>
-        <div className="flex items-center gap-2.5">
-          <Badge tone="jade">Lab</Badge>
-          <span className="text-[12px] text-ink-3 tnum">
-            Estimated {lesson.minutes} minutes
-          </span>
-        </div>
-        <h2 className="mt-3 font-display text-[1.6rem] leading-tight tracking-[var(--display-tracking)] text-ink">
-          {lesson.title}
-        </h2>
-        <div className="mt-3.5 max-w-[62ch] space-y-3 text-[14px] leading-relaxed text-ink-2">
-          <p>
-            A follower grants its vote only when the candidate&rsquo;s log is at
-            least as up to date as its own. Compare last log <em>terms</em>{" "}
-            first; the index only breaks a tie between equal terms.
-          </p>
-          <p>
-            Getting the comparison backwards is the single most common Raft bug
-            and it will not show up until an election happens during a partition.
-          </p>
-        </div>
-      </div>
-
-      <div className={frame}>
-        <div className="flex items-center gap-1 border-b border-line bg-surface-2 px-2 py-1.5">
-          {["raft.go", "log.go", "raft_test.go"].map((f, i) => (
-            <span
-              key={f}
-              className={cn(
-                "rounded-[var(--radius-xs)] px-2.5 py-1.5 font-mono text-[12px]",
-                i === 0
-                  ? "bg-surface text-ink shadow-[var(--shadow-e1)]"
-                  : "text-ink-3",
-              )}
-            >
-              {f}
-            </span>
-          ))}
-          <Button
-            size="xs"
-            className="ml-auto"
-            onClick={() => setRan(true)}
-          >
-            <Terminal className="size-3.5" /> Run tests
-          </Button>
-        </div>
-
-        <pre className="scrollbar-slim overflow-x-auto bg-stage p-5 font-mono text-[12.5px] leading-[1.7]">
-          <code>
-            {[
-              ["func (n *Node) canGrantVote(", "var(--stage-ink)"],
-              ["\tcandTerm, candLastIdx, candLastTerm int,", "var(--stage-ink-2)"],
-              [") bool {", "var(--stage-ink)"],
-              ["\tif candTerm < n.currentTerm {", "var(--stage-brand)"],
-              ["\t\treturn false", "var(--stage-ember)"],
-              ["\t}", "var(--stage-brand)"],
-              ["\tmyLastTerm := n.log.LastTerm()", "var(--stage-ink)"],
-              ["\tif candLastTerm != myLastTerm {", "var(--stage-brand)"],
-              ["\t\treturn candLastTerm > myLastTerm", "var(--stage-jade)"],
-              ["\t}", "var(--stage-brand)"],
-              ["\treturn candLastIdx >= n.log.LastIndex()", "var(--stage-jade)"],
-              ["}", "var(--stage-ink)"],
-            ].map(([line, color], i) => (
-              <span key={i} className="flex">
-                <span className="mr-4 inline-block w-5 shrink-0 text-right text-stage-ink-3 select-none">
-                  {i + 1}
-                </span>
-                <span style={{ color: color as string }}>{line}</span>
-              </span>
-            ))}
-          </code>
-        </pre>
-
-        {ran ? (
-          <div className="border-t border-line bg-surface-2 px-5 py-3.5 font-mono text-[12px] leading-relaxed">
-            <p className="text-jade">ok  raft  TestVoteGrantedHigherTerm  0.02s</p>
-            <p className="text-jade">ok  raft  TestVoteDeniedShorterLog   0.01s</p>
-            <p className="text-jade">ok  raft  TestVoteTieBrokenByIndex   0.01s</p>
-            <p className="mt-2 text-ink-2">
-              PASS · 3 of 3 · lesson marked complete
+    <div className="@container">
+      <div className={cn(frame, "grid @4xl:grid-cols-[19rem_minmax(0,1fr)]")}>
+        {/* instructions */}
+        <section className="min-w-0 border-b border-line p-5 @4xl:border-r @4xl:border-b-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge tone="jade">Guided lab</Badge>
+            {submitted ? (
+              <Badge tone="jade" dot>
+                Submitted
+              </Badge>
+            ) : null}
+            {practice ? (
+              <Badge tone="amber" dot>
+                Practice · no points
+              </Badge>
+            ) : null}
+            <span className="text-[12px] text-ink-3 tnum">{lesson.minutes} min</span>
+          </div>
+          <h2 className="mt-3.5 font-display text-[1.4rem] leading-[1.15] tracking-[var(--display-tracking)] text-ink">
+            Grant a vote only to an up-to-date log
+          </h2>
+          <div className="mt-2.5 space-y-2.5 text-[13.5px] leading-relaxed text-ink-2">
+            <p>
+              Implement <LabCode>canGrantVote</LabCode>. A follower votes only for
+              a candidate whose log is at least as up to date as its own. Compare
+              last log <em>terms</em> first. The index only breaks a tie.
+            </p>
+            <p>
+              Getting this backwards is the most common Raft bug, and it hides
+              until an election runs during a partition.
             </p>
           </div>
-        ) : null}
+
+          <p className="mt-5 text-[11px] font-semibold tracking-[0.13em] text-ink-3 uppercase">
+            Steps
+          </p>
+          <ol className="mt-2.5 space-y-3">
+            {LAB_STEPS.map((s, i) => {
+              const done = passed(s.test);
+              return (
+                <li key={s.test} className="flex gap-3">
+                  <span
+                    className={cn(
+                      "mt-px grid size-5 shrink-0 place-items-center rounded-full text-[11px] font-semibold transition-colors tnum",
+                      done ? "bg-jade text-on-accent" : "border border-line-strong text-ink-3",
+                    )}
+                  >
+                    {done ? <Check className="size-3" strokeWidth={3.5} /> : i + 1}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-[13.5px] font-medium text-ink">
+                      {s.title}
+                      <span className="sr-only">{done ? ", passing" : ", not passing yet"}</span>
+                    </span>
+                    <span className="mt-0.5 block text-[12.5px] leading-snug text-ink-2">
+                      {s.detail}
+                    </span>
+                    <span className="mt-1 block truncate font-mono text-[11px] text-ink-3">
+                      {s.test}
+                    </span>
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+
+          <LabHints
+            count={hints}
+            showEmpty
+            className="mt-5 hidden border-t border-line pt-4 @4xl:block"
+          />
+        </section>
+
+        {/* editor, actions and result */}
+        <div className="flex min-w-0 flex-col">
+          <div className="scrollbar-none flex items-center gap-1 overflow-x-auto border-b border-line bg-surface-2 px-2 py-1.5">
+            {(["raft.go", "raft_test.go"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFile(f)}
+                aria-pressed={file === f}
+                className={cn(
+                  "flex shrink-0 items-center gap-1.5 rounded-[var(--radius-xs)] px-2.5 py-1.5 font-mono text-[12px] transition-colors",
+                  file === f
+                    ? "bg-surface text-ink shadow-[var(--shadow-e1)]"
+                    : "text-ink-3 hover:text-ink",
+                )}
+              >
+                {f === "raft_test.go" ? <Lock className="size-3" /> : null}
+                {f}
+                {f === "raft.go" && code !== LAB_STARTER ? (
+                  <span className="size-1.5 rounded-full bg-brand" title="Edited" />
+                ) : null}
+              </button>
+            ))}
+            <span className="ml-auto hidden shrink-0 pr-1.5 text-[11.5px] text-ink-3 @md:block">
+              {file === "raft_test.go" || submitted ? "Read only" : "Go 1.23 · Tab indents"}
+            </span>
+          </div>
+
+          {file === "raft.go" ? (
+            <div className="flex bg-stage focus-within:shadow-[inset_0_0_0_1px_var(--stage-brand)]">
+              <LabGutter count={lines} />
+              <textarea
+                aria-label="raft.go"
+                aria-describedby={helpId}
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                onKeyDown={onKeyDown}
+                readOnly={submitted}
+                spellCheck={false}
+                autoCapitalize="off"
+                autoComplete="off"
+                wrap="off"
+                rows={Math.max(lines + 1, 12)}
+                className="scrollbar-slim block min-w-0 flex-1 resize-none overflow-x-auto overflow-y-hidden bg-transparent py-4 pr-4 font-mono text-[12.5px] leading-[1.7] whitespace-pre text-stage-ink caret-stage-brand [tab-size:4] focus:outline-none"
+              />
+              <p id={helpId} className="sr-only">
+                Tab inserts a tab. Press Escape, then Tab, to leave the editor.
+              </p>
+            </div>
+          ) : (
+            <div className="scrollbar-slim flex max-h-[26rem] overflow-y-auto bg-stage">
+              <LabGutter count={LAB_TEST_FILE.split("\n").length} />
+              <pre className="scrollbar-slim min-w-0 flex-1 overflow-x-auto py-4 pr-4 font-mono text-[12.5px] leading-[1.7] text-stage-ink-2 [tab-size:4]">
+                {LAB_TEST_FILE}
+              </pre>
+            </div>
+          )}
+
+          <div aria-live="polite" className="border-t border-line px-3 py-2.5">
+            {submitted ? (
+              <div className="flex items-start gap-3 rounded-[var(--radius-md)] bg-jade-soft px-3.5 py-3">
+                <CircleCheck className="mt-0.5 size-4.5 shrink-0 text-jade" />
+                <div className="min-w-0">
+                  <p className="text-[13.5px] font-semibold text-ink tnum">
+                    Answer submitted · {total} of {total} tests passing
+                  </p>
+                  <p className="mt-0.5 text-[12.5px] leading-relaxed text-ink-2">
+                    {practice
+                      ? "Saved as a practice attempt because the answer was shown, so no points were awarded."
+                      : "Lesson marked complete. Your code and its test output are saved with the attempt."}
+                  </p>
+                </div>
+              </div>
+            ) : confirming ? (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2.5 rounded-[var(--radius-md)] bg-amber-soft px-3.5 py-2.5">
+                <TriangleAlert className="size-4 shrink-0 text-amber" />
+                <p className="min-w-0 flex-1 basis-52 text-[13px] leading-snug text-ink">
+                  <span className="font-semibold">Show the answer?</span> This
+                  attempt becomes practice only and earns no points.
+                </p>
+                <div className="ml-auto flex gap-2">
+                  <Button size="xs" variant="ghost" onClick={() => setConfirming(false)}>
+                    Keep trying
+                  </Button>
+                  <Button size="xs" variant="secondary" onClick={showAnswer}>
+                    <Eye className="size-3.5" /> Show answer
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2">
+                <Button size="xs" variant="ghost" onClick={reset}>
+                  <RotateCcw className="size-3.5" /> Reset
+                </Button>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  onClick={() => setHints((h) => Math.min(LAB_HINTS.length, h + 1))}
+                  disabled={hints >= LAB_HINTS.length}
+                >
+                  <Lightbulb className="size-3.5" /> Help me
+                  <span className="text-ink-3 tnum">
+                    {hints}/{LAB_HINTS.length}
+                  </span>
+                </Button>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  // Once the answer has been seen there is nothing left to warn about.
+                  onClick={practice ? showAnswer : () => setConfirming(true)}
+                >
+                  <Eye className="size-3.5" /> Show answer
+                </Button>
+                <div className="ml-auto flex gap-2">
+                  {/* The filled button is always the next useful step. */}
+                  <Button
+                    size="xs"
+                    variant={canSubmit ? "secondary" : "primary"}
+                    onClick={() => {
+                      setPane("yours");
+                      setQueued(code);
+                    }}
+                    disabled={running}
+                  >
+                    {running ? (
+                      <LoaderCircle className="size-3.5 animate-spin" />
+                    ) : (
+                      <Terminal className="size-3.5" />
+                    )}
+                    {running ? "Running…" : "Run tests"}
+                  </Button>
+                  <Button
+                    size="xs"
+                    variant={canSubmit ? "primary" : "secondary"}
+                    onClick={() => setSubmitted(true)}
+                    disabled={!canSubmit}
+                  >
+                    <Send className="size-3.5" /> Submit answer
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Stacked, the instructions are a screen away; show hints beside the code. */}
+          <LabHints count={hints} className="border-t border-line px-4 py-3.5 @4xl:hidden" />
+
+          <div className="border-t border-line px-4 pt-3 pb-4">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <Segmented size="sm" items={LAB_PANES} value={pane} onChange={setPane} />
+              {pane === "yours" && report && !running ? (
+                <span className="ml-auto flex items-center gap-2">
+                  {stale ? (
+                    <span className="text-[12px] text-ink-3">Edited since this run</span>
+                  ) : null}
+                  <Badge
+                    tone={
+                      report.buildError || passing === 0
+                        ? "rose"
+                        : passing === total
+                          ? "jade"
+                          : "amber"
+                    }
+                    dot
+                  >
+                    <span className="tnum">
+                      {report.buildError ? "Build failed" : `${passing} of ${total} passing`}
+                    </span>
+                  </Badge>
+                </span>
+              ) : null}
+            </div>
+
+            <div className="mt-3">
+              {pane === "expected" ? (
+                <>
+                  <LabOutput report={LAB_EXPECTED} />
+                  <p className="mt-2 text-[12px] text-ink-3">
+                    A correct canGrantVote prints this. Match it, then submit.
+                  </p>
+                </>
+              ) : running ? (
+                <div
+                  role="status"
+                  className="min-h-[8.5rem] rounded-[var(--radius-md)] border border-line bg-surface-2 px-3.5 py-3 font-mono text-[12px] leading-relaxed"
+                >
+                  <p className="text-ink-3">$ go test -run TestVote ./raft</p>
+                  <p className="mt-1.5 flex items-center gap-2 text-ink-2">
+                    <LoaderCircle className="size-3.5 animate-spin text-brand" /> Running
+                    tests…
+                  </p>
+                </div>
+              ) : report ? (
+                <LabOutput report={report} />
+              ) : (
+                <div className="grid place-items-center rounded-[var(--radius-md)] border border-dashed border-line-strong bg-surface-2/50 px-5 py-7 text-center">
+                  <span className="grid size-9 place-items-center rounded-full border border-line bg-surface text-ink-3 shadow-[var(--shadow-e1)]">
+                    <Terminal className="size-4" />
+                  </span>
+                  <p className="mt-3 text-[13.5px] font-medium text-ink">No result yet</p>
+                  <p className="mt-1 max-w-xs text-[12.5px] leading-relaxed text-ink-3">
+                    Run the tests to check your code. Submit answer unlocks when
+                    all three pass.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
+    </div>
+  );
+}
+
+function LabCode({ children }: { children: React.ReactNode }) {
+  return (
+    <code className="rounded-[var(--radius-xs)] bg-surface-3 px-1 py-px font-mono text-[12px] text-ink">
+      {children}
+    </code>
+  );
+}
+
+function LabGutter({ count }: { count: number }) {
+  return (
+    <div
+      aria-hidden
+      className="shrink-0 py-4 pr-3 pl-4 text-right font-mono text-[12.5px] leading-[1.7] text-stage-ink-3 select-none tnum"
+    >
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="min-w-[2ch]">
+          {i + 1}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function LabHints({
+  count,
+  showEmpty = false,
+  className,
+}: {
+  count: number;
+  showEmpty?: boolean;
+  className?: string;
+}) {
+  if (count === 0 && !showEmpty) return null;
+  return (
+    <div className={className}>
+      <p className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.13em] text-ink-3 uppercase">
+        <Lightbulb className="size-3.5" /> Hints
+      </p>
+      {count === 0 ? (
+        <p className="mt-2 text-[12.5px] leading-relaxed text-ink-3">
+          Stuck? Help me reveals one hint at a time. Hints are free, showing the
+          answer is not.
+        </p>
+      ) : (
+        <ol className="mt-2.5 space-y-2">
+          {LAB_HINTS.slice(0, count).map((hint, i) => (
+            <li
+              key={i}
+              className="rounded-[var(--radius-md)] border border-line bg-surface-2 px-3 py-2.5"
+            >
+              <p className="text-[11.5px] font-semibold text-amber tnum">
+                Hint {i + 1} of {LAB_HINTS.length}
+              </p>
+              <p className="mt-1 text-[13px] leading-relaxed text-ink-2 [overflow-wrap:anywhere]">
+                {hint
+                  .split("`")
+                  .map((part, j) => (j % 2 ? <LabCode key={j}>{part}</LabCode> : part))}
+              </p>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  );
+}
+
+/** go test output, one row per test. */
+function LabOutput({ report }: { report: LabReport }) {
+  const ok = !report.buildError && report.tests.every((t) => t.pass);
+  return (
+    <div className="scrollbar-slim overflow-x-auto rounded-[var(--radius-md)] border border-line bg-surface-2 px-3.5 py-3 font-mono text-[12px] leading-relaxed">
+      <p className="whitespace-nowrap text-ink-3">$ go test -run TestVote ./raft</p>
+      {report.buildError ? (
+        <p className="mt-1.5 whitespace-pre text-rose">{`# raft\n${report.buildError}`}</p>
+      ) : (
+        <ul className="mt-1.5 space-y-1">
+          {report.tests.map((t) => (
+            <li key={t.name}>
+              <p
+                className={cn(
+                  "flex items-center gap-2 whitespace-nowrap",
+                  t.pass ? "text-jade" : "text-rose",
+                )}
+              >
+                {t.pass ? (
+                  <CircleCheck className="size-3.5 shrink-0" />
+                ) : (
+                  <CircleX className="size-3.5 shrink-0" />
+                )}
+                <span>
+                  --- {t.pass ? "PASS" : "FAIL"}: {t.name}
+                </span>
+                <span className="text-ink-3 tnum">({t.secs})</span>
+              </p>
+              {t.pass ? null : (
+                <p className="pl-5.5 text-ink-2 [overflow-wrap:anywhere]">{t.failure}</p>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      <p
+        className={cn(
+          "mt-2 border-t border-line pt-2 whitespace-pre tnum",
+          ok ? "text-jade" : "text-rose",
+        )}
+      >
+        {ok
+          ? "ok    raft  0.04s"
+          : report.buildError
+            ? "FAIL  raft  [build failed]"
+            : "FAIL  raft  0.04s"}
+      </p>
     </div>
   );
 }
