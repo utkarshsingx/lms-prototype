@@ -39,7 +39,7 @@ export const learnNav: NavItem[] = [
     href: "/assessments",
     label: "Assessments",
     icon: ClipboardCheck,
-    badge: "3",
+    badge: "4",
   },
   { href: "/progress", label: "Progress", icon: TrendingUp },
   { href: "/discussions", label: "Discussions", icon: MessagesSquare },
