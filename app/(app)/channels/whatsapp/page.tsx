@@ -22,7 +22,7 @@ export default function WhatsappPage() {
       <PageHeader
         eyebrow="Channels · WhatsApp"
         title="The learner's phone, used sparingly"
-        sub="The same assistant, reachable where people actually reply. Utility templates only, opted-in numbers only, and a human takes over the moment the assistant hits its boundary."
+        sub="The same assistant learners use on the web, reachable where they actually reply. Every conversation shows here as it happens, and anyone on the team can take over, reply as themselves, and hand it back."
         actions={
           <>
             <Button variant="secondary" size="sm">
@@ -32,6 +32,19 @@ export default function WhatsappPage() {
           </>
         }
       />
+
+      <section>
+        <SectionTitle
+          action={
+            <span className="text-[12px] text-ink-3">
+              Open a thread to watch it live · take over to reply
+            </span>
+          }
+        >
+          Inbox
+        </SectionTitle>
+        <WhatsappInbox />
+      </section>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <StatTile
@@ -55,11 +68,6 @@ export default function WhatsappPage() {
           icon={<UserMinus />}
         />
       </div>
-
-      <section>
-        <SectionTitle>Inbox</SectionTitle>
-        <WhatsappInbox />
-      </section>
 
       <section>
         <SectionTitle
@@ -136,7 +144,9 @@ export default function WhatsappPage() {
             "STOP opts out immediately and permanently, across every campaign.",
             "Marketing templates are capped at one per learner per fortnight.",
             "A learner who replies with a question gets the assistant, not a template.",
-            "Grades, attempt limits and account decisions escalate to a human.",
+            "Grades, attempt limits and account decisions escalate to a person.",
+            "Taking over pauses the assistant on that thread until someone hands it back.",
+            "Every reply records who sent it: the assistant, or a named person.",
           ].map((r) => (
             <li key={r} className="flex gap-2.5">
               <BadgeCheck className="mt-0.5 size-4 shrink-0 text-jade" />
