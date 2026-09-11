@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import { categories, courses } from "@/lib/data";
 import { CourseCard } from "@/components/course/course-card";
+import { SectionTitle } from "@/components/ui/card";
 import { PageHeader, EmptyState } from "@/components/ui/misc";
 import { Segmented } from "@/components/ui/tabs";
 import { Input, Select } from "@/components/ui/field";
@@ -60,6 +61,29 @@ export default function CatalogPage() {
         title="Everything you can learn here"
         sub={`${published.length} published courses across ${categories.length} categories. Compliance courses are assigned to you automatically; everything else is yours to pick up.`}
       />
+
+      {!filtered ? (
+        <section>
+          <SectionTitle
+            action={
+              <span className="inline-flex items-center gap-1.5 text-[11.5px] text-ink-3">
+                <Sparkles className="size-3.5 text-violet" />
+                Matched to your path and level
+              </span>
+            }
+          >
+            Recommended for you
+          </SectionTitle>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {published
+              .filter((c) => c.progress == null)
+              .slice(0, 3)
+              .map((c) => (
+                <CourseCard key={c.id} course={c} />
+              ))}
+          </div>
+        </section>
+      ) : null}
 
       <div className="space-y-3.5">
         <div className="flex flex-wrap items-center gap-3">
