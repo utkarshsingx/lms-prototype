@@ -17,7 +17,6 @@ import {
 import { PageHeader, StatTile } from "@/components/ui/misc";
 import { Card, SectionTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LinkButton } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
 export const metadata = { title: "Assessments" };
@@ -26,7 +25,10 @@ const daysTo = (iso: string) =>
   Math.ceil((new Date(iso).getTime() - Date.parse("2026-09-05T12:00:00+05:30")) / 86400000);
 
 export default function AssessmentsPage() {
-  const open = assessments.filter((a) => a.status === "open");
+  // A diagnostic only places you in a course; there is nothing to prove.
+  const open = assessments.filter(
+    (a) => a.status === "open" && a.kind !== "Diagnostic",
+  );
   const mine = submissions.filter((s) => s.personId === "u-anaya");
 
   return (
