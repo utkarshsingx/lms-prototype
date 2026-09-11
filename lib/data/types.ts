@@ -111,7 +111,8 @@ export type QuestionType =
   | "truefalse"
   | "short"
   | "code"
-  | "essay";
+  | "essay"
+  | "match";
 
 export type Question = {
   id: string;
@@ -121,6 +122,11 @@ export type Question = {
   options?: string[];
   /** Index (mcq/truefalse) or indices (multi). */
   answer?: number | number[];
+  /** Match questions only. Each left item's correct partner is the `right` on
+   *  the same row; the runner shuffles the right-hand column for display. */
+  pairs?: { left: string; right: string }[];
+  /** Diagnostic questions only: the curriculum module (0-based) this tests. */
+  moduleIndex?: number;
   explanation?: string;
   starter?: string;
   rubricId?: string;
@@ -130,7 +136,7 @@ export type Assessment = {
   id: string;
   title: string;
   courseId: string;
-  kind: "Quiz" | "Graded exam" | "Assignment" | "Project";
+  kind: "Quiz" | "Graded exam" | "Assignment" | "Project" | "Diagnostic";
   minutes: number;
   attempts: number;
   passMark: number;
@@ -173,9 +179,13 @@ export type Submission = {
 
 export type ChatMessage = {
   id: string;
-  from: "learner" | "bot" | "agent";
+  /** "system" is an event in the thread (a hand-off, an escalation). It is
+   *  shown to the team only and never delivered to the learner. */
+  from: "learner" | "bot" | "agent" | "system";
   text: string;
   at: string;
+  /** Who wrote an agent message, shown above the bubble. */
+  author?: string;
   /** Sources the assistant cited, rendered as chips under the reply. */
   citations?: { label: string; href: string }[];
   /** Tool the assistant invoked to answer. */
@@ -193,6 +203,15 @@ export type Conversation = {
   unread: number;
   csat?: number;
   handledBy: "bot" | "human";
+  /** WhatsApp only. Free-form replies are allowed for 24 hours after the
+   *  learner's last message; outside that window only approved templates send. */
+  windowOpen?: boolean;
+  windowClosesAt?: string;
+  /** Messages still to arrive, played back when the thread is opened so the
+   *  inbox shows an assistant conversation happening live. */
+  pending?: ChatMessage[];
+  /** The draft the assistant offers a person who has taken over. */
+  suggestedReply?: string;
   messages: ChatMessage[];
 };
 
