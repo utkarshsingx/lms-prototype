@@ -21,15 +21,11 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { LinkButton } from "@/components/ui/button";
 import { LessonTypeIcon } from "@/components/course/lesson-icon";
+import { Greeting } from "@/components/dashboard/greeting";
 import { MyLearningTabs } from "@/components/dashboard/my-learning-tabs";
 import { cn } from "@/lib/cn";
 
 export const metadata = { title: "Home" };
-
-function greeting() {
-  const h = new Date().getHours();
-  return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
-}
 
 const kindIcon: Record<UpcomingItem["kind"], typeof Radio> = {
   "Live session": Radio,
@@ -52,18 +48,7 @@ export default function DashboardPage() {
   return (
     <div className="mx-auto max-w-[76rem] space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-        <div>
-          <p className="text-[12px] font-medium tracking-[0.02em] text-ink-3">
-            {new Date().toLocaleDateString("en-GB", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-            })}
-          </p>
-          <h1 className="mt-1.5 font-display text-[clamp(1.8rem,1.4rem+1.4vw,2.5rem)] leading-[1.05] tracking-[var(--display-tracking)] text-ink">
-            {greeting()}, {currentUser.name.split(" ")[0]}
-          </h1>
-        </div>
+        <Greeting firstName={currentUser.name.split(" ")[0]} />
         <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-[12.5px] font-medium text-ink shadow-[var(--shadow-e1)]">
           <Flame className="size-4 text-ember" />
           <span className="tnum">{currentUser.streak}</span>
