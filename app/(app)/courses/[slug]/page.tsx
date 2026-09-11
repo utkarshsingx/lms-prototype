@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
+  ArrowRight,
   Award,
   BadgeCheck,
   BarChart3,
   CalendarDays,
   CheckCircle2,
   Clock,
+  Compass,
   Globe,
+  Lock,
   Play,
   Quote,
   Star,
@@ -21,7 +24,7 @@ import {
   lessonTypeLabel,
   personById,
 } from "@/lib/data";
-import { Card, CardHeader, SectionTitle } from "@/components/ui/card";
+import { Card, SectionTitle } from "@/components/ui/card";
 import { Badge, Tag, type Tone } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar } from "@/components/ui/avatar";
@@ -78,8 +81,16 @@ export default async function CoursePage({
   const related = courses
     .filter((c) => c.id !== course.id && c.category === course.category)
     .slice(0, 3);
-  const courseAssessments = assessments.filter((a) => a.courseId === course.id);
+  // The diagnostic has its own card above the curriculum, so it is not listed.
+  const courseAssessments = assessments.filter(
+    (a) => a.courseId === course.id && a.kind !== "Diagnostic",
+  );
   const enrolled = course.progress != null;
+  const diagnostic = enrolled
+    ? undefined
+    : assessments.find(
+        (a) => a.courseId === course.id && a.kind === "Diagnostic",
+      );
   const totalLessons = lessonCount(course);
 
   const typeBreakdown = course.modules
@@ -170,6 +181,44 @@ export default async function CoursePage({
             </div>
           </section>
 
+          {diagnostic ? (
+            <section>
+              <Card className="p-5 sm:p-6">
+                <div className="flex gap-4">
+                  <span className="grid size-11 shrink-0 place-items-center rounded-[var(--radius-md)] bg-brand-soft text-brand">
+                    <Compass className="size-5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[15px] font-semibold tracking-[-0.012em] text-ink">
+                      Start with a diagnostic
+                    </p>
+                    <p className="mt-1.5 max-w-xl text-[13.5px] leading-relaxed text-ink-2">
+                      It takes about {diagnostic.minutes} minutes and you get
+                      one attempt. It places you past the modules you already
+                      know, so you start where the course is new to you. You can
+                      also just start from module 1.
+                    </p>
+                    <p className="mt-2 text-[12px] text-ink-3 tnum">
+                      {diagnostic.questions.length} questions ·{" "}
+                      {course.modules.length} modules · not graded
+                    </p>
+                    <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
+                      <LinkButton href={`/assessments/${diagnostic.id}`}>
+                        Start diagnostic <ArrowRight className="size-4" />
+                      </LinkButton>
+                      <Link
+                        href={`/learn/${course.slug}`}
+                        className="text-[13px] font-medium text-ink-2 underline-offset-4 hover:text-ink hover:underline"
+                      >
+                        Skip it and start from module 1
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </section>
+          ) : null}
+
           <section>
             <SectionTitle
               action={
@@ -182,6 +231,16 @@ export default async function CoursePage({
               Curriculum
             </SectionTitle>
             <Card className="divide-y divide-[var(--line)] overflow-hidden">
+              {diagnostic ? (
+                <p className="flex items-start gap-2.5 bg-surface-2 px-5 py-3 text-[12.5px] leading-relaxed text-ink-2">
+                  <Lock className="mt-0.5 size-3.5 shrink-0 text-ink-3" />
+                  <span>
+                    The curriculum unlocks after the diagnostic, which you can
+                    attempt once, or as soon as you choose to start from module
+                    1. Preview lessons are open now.
+                  </span>
+                </p>
+              ) : null}
               {course.modules.map((m, mi) => {
                 const mins = m.lessons.reduce((n, l) => n + l.minutes, 0);
                 const done = m.lessons.filter(
@@ -209,6 +268,12 @@ export default async function CoursePage({
                           </span>
                         ) : null}
                       </span>
+                      {diagnostic ? (
+                        <span className="inline-flex shrink-0 text-ink-3">
+                          <Lock className="size-3.5" />
+                          <span className="sr-only">Locked</span>
+                        </span>
+                      ) : null}
                       <svg
                         viewBox="0 0 12 12"
                         className="size-3 shrink-0 text-ink-3 transition-transform group-open:rotate-180"
@@ -225,7 +290,10 @@ export default async function CoursePage({
                           key={l.id}
                           className="flex items-center gap-3.5 px-5 py-2.5 pl-[4.25rem]"
                         >
-                          <LessonBullet type={l.type} state={l.state} />
+                          <LessonBullet
+                            type={l.type}
+                            state={diagnostic && !l.preview ? "locked" : l.state}
+                          />
                           <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink-2">
                             {l.title}
                           </span>

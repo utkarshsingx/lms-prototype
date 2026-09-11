@@ -7,3 +7,4 @@ export * from "./assessments";
 export * from "./conversations";
 export * from "./voice";
 export * from "./analytics";
+export * from "./discussions";

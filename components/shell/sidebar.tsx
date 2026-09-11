@@ -121,29 +121,6 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         ) : null}
       </nav>
 
-      {/* Compliance nudge — the one persistent thing a learning platform owes you. */}
-      {!managing ? (
-        <div className="rounded-[var(--radius-md)] border border-line bg-surface p-3 shadow-[var(--shadow-e1)]">
-          <div className="flex items-center justify-between">
-            <p className="text-[11.5px] font-semibold text-ink">
-              Compliance 2026
-            </p>
-            <span className="text-[11px] font-medium text-ember tnum">
-              1 left
-            </span>
-          </div>
-          <p className="mt-1 text-[11.5px] leading-snug text-ink-3">
-            Privacy certification due 31 Oct.
-          </p>
-          <Link
-            href="/assessments/a-privacy-final"
-            className="mt-2.5 inline-flex text-[12px] font-medium text-brand hover:underline"
-          >
-            Finish it →
-          </Link>
-        </div>
-      ) : null}
-
       <div className="relative">
         <button
           onClick={() => setMenu((m) => !m)}

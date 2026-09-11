@@ -6,11 +6,13 @@ import {
   GraduationCap,
   LayoutGrid,
   MessageSquareText,
+  MessagesSquare,
   PenSquare,
   PhoneCall,
   Route,
   Settings,
   Sparkles,
+  TrendingUp,
   Users,
 } from "lucide-react";
 
@@ -37,8 +39,10 @@ export const learnNav: NavItem[] = [
     href: "/assessments",
     label: "Assessments",
     icon: ClipboardCheck,
-    badge: "3",
+    badge: "4",
   },
+  { href: "/progress", label: "Progress", icon: TrendingUp },
+  { href: "/discussions", label: "Discussions", icon: MessagesSquare },
   { href: "/assistant", label: "Assistant", icon: Sparkles },
 ];
 

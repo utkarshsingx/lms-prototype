@@ -236,6 +236,30 @@ export const assessments: Assessment[] = [
           "Sequential consistency gives a single global order but is free to ignore real time. Linearizability additionally pins that order to wall-clock ordering, which is what makes read-your-writes hold across clients.",
       },
       {
+        id: "q-consistency-match",
+        type: "match",
+        points: 6,
+        prompt: "Match each consistency model to the guarantee it gives",
+        pairs: [
+          {
+            left: "Linearizable",
+            right: "Operations respect real-time order across clients",
+          },
+          {
+            left: "Sequential",
+            right: "One global order, but real time may be ignored",
+          },
+          {
+            left: "Causal",
+            right:
+              "Effects never appear before their causes; concurrent writes may diverge",
+          },
+          { left: "Eventual", right: "Replicas converge once writes stop" },
+        ],
+        explanation:
+          "Read the models from strongest to weakest. Linearizability pins every operation to a point in real time. Sequential consistency keeps one order that every client agrees on, but that order may disagree with the wall clock. Causal consistency only orders operations that depend on each other, so replicas can apply concurrent writes in different orders. Eventual consistency promises only that replicas agree once writes stop arriving.",
+      },
+      {
         id: "q3",
         type: "truefalse",
         points: 3,
@@ -543,6 +567,150 @@ export const assessments: Assessment[] = [
         points: 25,
         prompt:
           "Submit a Deployment and Service manifest with probes and resource settings justified by measurement.",
+      },
+    ],
+  },
+  {
+    id: "a-data-diagnostic",
+    title: "Analytics Engineering diagnostic",
+    courseId: "c-data",
+    kind: "Diagnostic",
+    minutes: 12,
+    attempts: 1,
+    passMark: 0,
+    autoGraded: true,
+    proctored: false,
+    status: "open",
+    dueAt: "2027-12-31T23:59:00+05:30",
+    submissions: 1184,
+    cohortSize: 1670,
+    averageScore: 61,
+    questions: [
+      {
+        id: "d1",
+        type: "mcq",
+        points: 1,
+        moduleIndex: 0,
+        prompt:
+          "A leaderboard orders scores of 90, 85, 85 and 80 from highest to lowest. Product wants the two 85s to share second place and the 80 to show as third, not fourth. Which function gives that?",
+        options: ["ROW_NUMBER()", "RANK()", "DENSE_RANK()", "NTILE(3)"],
+        answer: 2,
+        explanation:
+          "ROW_NUMBER never ties, so it returns 1, 2, 3, 4 and orders the two 85s arbitrarily. RANK gives ties the same rank and then leaves a gap: 1, 2, 2, 4. DENSE_RANK gives ties the same rank with no gap: 1, 2, 2, 3. NTILE(3) splits the rows into three buckets and returns 1, 1, 2, 3.",
+      },
+      {
+        id: "d2",
+        type: "mcq",
+        points: 1,
+        moduleIndex: 0,
+        prompt:
+          "`SUM(amount) OVER (ORDER BY order_date)` is meant to be a running total, but on a day with two orders both rows show the same figure, already including both orders. Why?",
+        options: [
+          "SUM skips duplicate values of the ORDER BY column",
+          "With ORDER BY and no frame clause, the frame defaults to RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW, which includes every row that ties on order_date",
+          "A window function needs PARTITION BY before it can order rows",
+          "Window functions run before the WHERE clause, so the rows are counted twice",
+        ],
+        answer: 1,
+        explanation:
+          "When a window has ORDER BY but no explicit frame, the default is RANGE UNBOUNDED PRECEDING, and RANGE treats rows with equal sort keys as peers of the current row, so both same-day rows see the whole day. Use ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW, and add a tiebreaker such as order_id to the ORDER BY so the result is deterministic.",
+      },
+      {
+        id: "d3",
+        type: "mcq",
+        points: 1,
+        moduleIndex: 1,
+        prompt:
+          "You are about to build a new fact table. What should you settle before choosing any of its columns?",
+        options: [
+          "Which dashboards will read from it",
+          "Its grain: exactly what one row represents, such as one row per order line",
+          "Which dimensions it will join to",
+          "Whether it should be built incrementally",
+        ],
+        answer: 1,
+        explanation:
+          "Grain decides which measures can be summed and which joins are safe. Once it is declared, every proposed column either fits that grain or belongs in another table. Most double-counting and join fan-out bugs trace back to a grain nobody wrote down.",
+      },
+      {
+        id: "d4",
+        type: "multi",
+        points: 1,
+        moduleIndex: 1,
+        prompt:
+          "In a subscription product, which of these belong in a fact table rather than a dimension? Select all that apply.",
+        options: [
+          "The amount charged on each invoice",
+          "A customer's country and signup channel",
+          "The number of seats added in a plan change",
+          "The product category hierarchy",
+        ],
+        answer: [0, 2],
+        explanation:
+          "Facts record measurable events at a declared grain, such as an invoice or a seat change. Dimensions describe the context you slice those events by: who the customer is, where they came from, which category a product sits in.",
+      },
+      {
+        id: "d5",
+        type: "mcq",
+        points: 1,
+        moduleIndex: 1,
+        prompt:
+          "A type 2 slowly changing dimension keeps each customer's plan history with valid_from and valid_to columns. To find the plan a customer was on when an order was placed, how do you join?",
+        options: [
+          "On customer_id, keeping the row with the latest valid_from",
+          "On customer_id where is_current is true",
+          "On customer_id where the order time is at or after valid_from and before valid_to",
+          "On customer_id where the order time is BETWEEN valid_from AND valid_to",
+        ],
+        answer: 2,
+        explanation:
+          "Type 2 adds a row for every change, so a point-in-time lookup needs the business key plus a range on the validity columns. Taking the latest or current row rewrites history with today's plan. Keep the range half-open: BETWEEN is inclusive at both ends, so when one row's valid_to equals the next row's valid_from, an order at that moment matches both rows and is counted twice.",
+      },
+      {
+        id: "d6",
+        type: "mcq",
+        points: 1,
+        moduleIndex: 2,
+        prompt:
+          "An incremental model only processes rows whose updated_at is later than the latest updated_at already in the table. You fix a bug in how it calculates revenue and deploy. What happens to rows loaded before the fix?",
+        options: [
+          "They are recalculated on the next scheduled run",
+          "They keep the old, wrong values until you run a full refresh or a backfill",
+          "The tool notices the changed SQL and rebuilds the table",
+          "They are dropped and reloaded from the source",
+        ],
+        answer: 1,
+        explanation:
+          "An incremental run only touches rows past the high-water mark, so a logic change applies from now on and history quietly keeps the old calculation. Plan a full refresh or a bounded backfill with every logic change. The same filter also misses late-arriving rows whose updated_at lands behind the mark, which is why many models reprocess a short lookback window.",
+      },
+      {
+        id: "d7",
+        type: "multi",
+        points: 1,
+        moduleIndex: 2,
+        prompt:
+          "Which of these can a generic schema test (unique, not_null, accepted_values, relationships) catch on its own? Select all that apply.",
+        options: [
+          "Two rows with the same order_id",
+          "An order whose customer_id has no matching customer",
+          "A refund larger than the charge it refunds",
+          "Daily revenue that no longer reconciles with the finance ledger",
+        ],
+        answer: [0, 1],
+        explanation:
+          "Schema tests assert a property of one column: unique, present, one of a known set of values, or pointing at a row that exists. Rules that compare columns or tables, such as a refund never exceeding its charge or revenue matching finance, need a data test: a query that returns the rows breaking the rule and fails if it returns any.",
+      },
+      {
+        id: "d8",
+        type: "truefalse",
+        points: 1,
+        moduleIndex: 2,
+        prompt:
+          "If every schema test and data test on a model passes, the numbers it shows are current.",
+        options: ["True", "False"],
+        answer: 1,
+        explanation:
+          "Tests check the data that is there, not whether new data is still arriving. If a source stopped loading two days ago, every stale row still passes. A freshness check on the source's loaded-at timestamp, with warn and error thresholds, is what catches a pipeline that has quietly stopped.",
       },
     ],
   },

@@ -98,9 +98,94 @@ export const contentHealth = [
   { course: "Kubernetes for Application Teams", issue: "Awaiting review 9 days", severity: "low", detail: "Submitted by Marcus Bell, no reviewer assigned." },
 ];
 
-export const upcoming = [
-  { id: "up-1", title: "Consensus and replication", kind: "Graded exam", course: "Distributed Systems in Practice", when: "Due in 9 days", urgent: false },
-  { id: "up-2", title: "Incident walkthrough", kind: "Live session", course: "Distributed Systems in Practice", when: "Tomorrow, 16:00 IST", urgent: true },
-  { id: "up-3", title: "Evaluation report", kind: "Assignment", course: "Building With Large Language Models", when: "Due in 14 days", urgent: false },
-  { id: "up-4", title: "Privacy certification 2026", kind: "Compliance", course: "Data Privacy and GDPR", when: "Due 31 Oct", urgent: false },
+export type UpcomingItem = {
+  id: string;
+  title: string;
+  kind: "Live session" | "Mentor session" | "Graded exam" | "Assignment" | "Compliance";
+  course: string;
+  /** Date tile, already formatted: absolute dates so a shared link never says "tomorrow" on the wrong day. */
+  day: string;
+  month: string;
+  time: string;
+  href?: string;
+  urgent?: boolean;
+};
+
+export const upcoming: UpcomingItem[] = [
+  { id: "up-1", title: "Incident walkthrough", kind: "Live session", course: "Distributed Systems in Practice", day: "12", month: "Sep", time: "Sat · 16:00 IST", href: "/learn/distributed-systems-in-practice", urgent: true },
+  { id: "up-2", title: "Consensus and replication", kind: "Graded exam", course: "Distributed Systems in Practice", day: "14", month: "Sep", time: "Due 23:59 IST", href: "/assessments/a-dist-consensus" },
+  { id: "up-3", title: "Design review with Marcus Bell", kind: "Mentor session", course: "Distributed Systems in Practice", day: "15", month: "Sep", time: "Tue · 17:30 IST" },
+  { id: "up-4", title: "Evaluation report", kind: "Assignment", course: "Building With Large Language Models", day: "19", month: "Sep", time: "Due 23:59 IST", href: "/assessments/a-llm-eval" },
+  { id: "up-5", title: "Privacy certification 2026", kind: "Compliance", course: "Data Privacy and GDPR", day: "31", month: "Oct", time: "Due 23:59 IST", href: "/assessments/a-privacy-final" },
+];
+
+/* The learner's own progress report (/progress). Weekly minutes cover the last
+   eight weeks, so the final four sum to the 30-day total shown beside them. */
+export const learnerReport = {
+  minutes30d: 860,
+  minutesPrev30d: 680,
+  weeklyMinutes: [120, 165, 150, 175, 205, 230, 190, 235],
+  weekLabels: ["20 Jul", "27 Jul", "3 Aug", "10 Aug", "17 Aug", "24 Aug", "31 Aug", "7 Sep"],
+  sessions: { attended: 7, scheduled: 9, hours: 11 },
+  assessments: { passed: 7, taken: 8, averageScore: 88 },
+};
+
+export type CourseReport = {
+  courseId: string;
+  minutesSpent: number;
+  sessions: { attended: number; scheduled: number };
+  /** Course completion at the end of each of the last eight weeks. */
+  completionByWeek: number[];
+  /** Proficiency by skill, from quiz and lab results. Null until assessed. */
+  skills: { name: string; score: number | null }[];
+};
+
+export const courseReports: CourseReport[] = [
+  {
+    courseId: "c-dist",
+    minutesSpent: 640,
+    sessions: { attended: 3, scheduled: 4 },
+    completionByWeek: [8, 15, 22, 30, 38, 47, 55, 62],
+    skills: [
+      { name: "Failure models", score: 86 },
+      { name: "Clocks and ordering", score: 78 },
+      { name: "Consensus (Raft)", score: 64 },
+      { name: "Consistency models", score: null },
+      { name: "Operations", score: null },
+    ],
+  },
+  {
+    courseId: "c-privacy",
+    minutesSpent: 85,
+    sessions: { attended: 0, scheduled: 0 },
+    completionByWeek: [0, 0, 0, 10, 18, 27, 36, 45],
+    skills: [
+      { name: "Lawful basis", score: 92 },
+      { name: "Data subject rights", score: 70 },
+      { name: "Breach response", score: null },
+    ],
+  },
+  {
+    courseId: "c-llm",
+    minutesSpent: 310,
+    sessions: { attended: 2, scheduled: 3 },
+    completionByWeek: [0, 4, 9, 14, 20, 24, 30, 34],
+    skills: [
+      { name: "Model behaviour", score: 81 },
+      { name: "Retrieval design", score: 94 },
+      { name: "Evaluation", score: 38 },
+      { name: "Agent safety", score: null },
+    ],
+  },
+  {
+    courseId: "c-design",
+    minutesSpent: 70,
+    sessions: { attended: 0, scheduled: 1 },
+    completionByWeek: [0, 0, 0, 0, 0, 4, 8, 12],
+    skills: [
+      { name: "Diagnosing drift", score: 55 },
+      { name: "Token architecture", score: null },
+      { name: "Component APIs", score: null },
+    ],
+  },
 ];

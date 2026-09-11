@@ -36,6 +36,7 @@ export default async function AssessmentPage({
       rubric={rubricById(assessment.rubricId)}
       courseTitle={course?.title ?? ""}
       courseSlug={course?.slug ?? ""}
+      moduleTitles={course?.modules.map((m) => m.title)}
     />
   );
 }
