@@ -44,7 +44,7 @@ const rules: Rule[] = [
       graduate: {
         from: "bot",
         action: "checked exam bookings, entry windows and open mocks",
-        text: "Your **FR** entry for the December 2026 session is booked. Your **PM reattempt** is planned for the same session but not booked yet.\n\n**5 Oct 2026**: early entry closes (lowest ACCA fee).\n**2 Nov 2026**: standard entry closes.\n**16 Nov 2026**: late entry closes.\n**7 to 10 Dec 2026**: exams. Results on 25 Jan 2027.\n\nOn the platform, your **FR mock exam · Dec 2026** is in progress and the **Group accounts test** has a retake available. Entering PM before 5 October keeps the fee at the early rate.",
+        text: "Your **FR** entry for the December 2026 session is booked. Your **PM reattempt** is planned for the same session but not booked yet.\n\n**5 Oct 2026**: early entry closes (lowest ACCA fee).\n**2 Nov 2026**: standard entry closes.\n**16 Nov 2026**: late entry closes.\n**7 to 10 Dec 2026**: exams. Results on 25 Jan 2027.\n\nOn the platform, your **FR mock exam · Dec 2026** is on Saturday 24 October and the **Group accounts test** has a retake available. Entering PM before 5 October keeps the fee at the early rate.",
         citations: [
           { label: "Exams & results", href: "/exams" },
           { label: "FR mock exam · Dec 2026", href: "/assessments/a-fr-mock" },
@@ -67,7 +67,7 @@ const rules: Rule[] = [
       graduate: {
         from: "bot",
         action: "read your readiness scores and mock history",
-        text: "Your **FR readiness score is 64** and **PM is 58**. Both are above the 50% pass mark, but neither has much margin yet.\n\nFR is held back by **D Preparation of financial statements**, mostly group accounts: your Group accounts test has a retake available and the FR mock is still in progress. PM is held back by **C Budgeting and control**, the area that cost you marks in June.\n\nThe quickest way to move both scores: finish the FR mock under timed conditions, retake the group accounts test, and rework your PM variance analysis report using the faculty feedback. Your attendance of 88% already counts in your favour.",
+        text: "Your **FR readiness score is 64** and **PM is 58**. Both are above the 50% pass mark, but neither has much margin yet.\n\nFR is held back by **D Preparation of financial statements**, mostly group accounts: your Group accounts test has a retake available and the FR mock is on 24 October. PM is held back by **C Budgeting and control**, the area that cost you marks in June.\n\nThe quickest way to move both scores: sit the FR mock on 24 October under timed conditions, retake the group accounts test, and rework your PM variance analysis report using the faculty feedback. Your attendance of 88% already counts in your favour.",
         citations: [
           { label: "Readiness", href: "/readiness" },
           { label: "Group accounts test", href: "/assessments/a-fr-groups" },
@@ -102,7 +102,7 @@ const rules: Rule[] = [
       graduate: {
         from: "bot",
         action: "read your PM attempt history and revision cohort",
-        text: "You sat **PM in June 2026 and scored 46%**, four marks below the pass mark. Your mock and question bank history point to **C Budgeting and control**, especially explaining what mix and yield variances mean in the written section.\n\nYou are in **PM Revision and Reattempt · Dec 2026** (weekend batch) with Farah Siddiqui. A plan that fits before December:\n\n**September**: work through Farah Siddiqui's feedback on your variance analysis report. You scored 94% on the budgeting and standard costing check, so the gap is written interpretation, not calculation.\n**October**: two timed constructed-response questions a week from the question bank.\n**November**: the PM mock exam under exam conditions, then a review call with Aisha Khan.\n\nRemember the entry itself: early entry for December closes on 5 October.",
+        text: "You sat **PM in June 2026 and scored 46%**, four marks below the pass mark. Your mock and question bank history point to **C Budgeting and control**, especially explaining what mix and yield variances mean in the written section.\n\nYou are in **PM Revision and Reattempt · Dec 2026** (weekend batch) with Farah Siddiqui. A plan that fits before December:\n\n**September**: work through Farah Siddiqui's feedback on your variance analysis report. You scored 94% on the budgeting and standard costing check, so the gap is written interpretation, not calculation.\n**October**: two timed constructed-response questions a week from the question bank.\n**31 October**: the PM mock exam under exam conditions, then a review call with Aisha Khan in November.\n\nRemember the entry itself: early entry for December closes on 5 October.",
         citations: [
           { label: "Variance analysis report", href: "/assessments/a-pm-variance" },
           { label: "PM mock exam · Dec 2026", href: "/assessments/a-pm-mock" },

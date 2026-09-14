@@ -27,7 +27,7 @@ const rules: Rule[] = [
     reply: {
       from: "bot",
       action: "checked your deadlines across 2 papers in progress",
-      text: "Three things need you this week.\n\n**Wednesday 19:00 IST**: mentor session with Aisha Khan on your PM reattempt plan.\n**Saturday 10:00 IST**: Live class: group accounts exam technique, FR weekend batch.\n**Sunday 20 September**: Group accounts test, 45 minutes, 2 attempts, pass mark 50%.\n\nFurther out, early entry for the December exams closes on 5 October and your PM reattempt is not entered yet. The live class is the only one you cannot move. Want me to block 90 minutes on Friday evening to prepare for the test?",
+      text: "Three things need you this week.\n\n**Today 19:30 IST**: mentor session with Aisha Khan on your PM reattempt plan.\n**Saturday 09:30 IST**: Live class: ratio analysis and interpretation, FR weekend batch.\n**Sunday 20 September**: Group accounts test, 45 minutes, 2 attempts, pass mark 50%.\n\nFurther out, early entry for the December exams closes on 5 October and your PM reattempt is not entered yet. The live class is the only one you cannot move. Want me to block 90 minutes on Friday evening to prepare for the test?",
       citations: [
         { label: "Group accounts test", href: "/assessments/a-fr-groups" },
         { label: "Financial Reporting (FR)", href: "/learn/financial-reporting-fr" },
@@ -83,7 +83,7 @@ const rules: Rule[] = [
     reply: {
       from: "bot",
       action: "booked 1 mock exam slot and 1 calendar hold",
-      text: "Booked. **FR mock exam · Dec 2026** on Saturday 21 November, 10:00 to 13:00 IST, timed and proctored like the real session CBE. I have also kept Friday evening before it free of study blocks.\n\nThat leaves two weeks to act on the result before exams start on 7 December. If the slot moves, reply here and I will find the next free window rather than dropping it.",
+      text: "Booked. **FR mock exam · Dec 2026** on Saturday 24 October, 10:00 to 13:00 IST, timed and proctored like the real session CBE. I have also kept Friday evening before it free of study blocks.\n\nThat leaves six weeks to act on the result before exams start on 7 December. If the slot moves, reply here and I will find the next free window rather than dropping it.",
       citations: [{ label: "FR mock exam · Dec 2026", href: "/assessments/a-fr-mock" }],
     },
   },

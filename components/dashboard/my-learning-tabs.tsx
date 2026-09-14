@@ -19,7 +19,7 @@ import { Progress } from "@/components/ui/progress";
 /* Anaya's standing on each open assessment. Mirrors the attempt history on
    /mocks and /exams so the pages never disagree. */
 const MY_ATTEMPTS: Record<string, { used: number; label: string; tone: Tone; order: number }> = {
-  "a-fr-mock": { used: 1, label: "In progress", tone: "brand", order: 0 },
+  "a-fr-mock": { used: 0, label: "Scheduled · 24 Oct", tone: "amber", order: 0 },
   "a-fr-groups": { used: 1, label: "Retake available", tone: "amber", order: 1 },
   "a-pm-budgeting": { used: 1, label: "Completed · 94%", tone: "jade", order: 3 },
   "a-epsm-final": { used: 1, label: "Completed · 93%", tone: "jade", order: 3 },

@@ -137,7 +137,7 @@ export const paths: LearningPath[] = [
         courseId: "c-pm",
         required: false,
         weeks: 10,
-        gate: "Reattempt: sit the PM mock exam by 29 November",
+        gate: "Reattempt: sit the PM mock exam on 31 October",
       },
       {
         courseId: "c-aa",

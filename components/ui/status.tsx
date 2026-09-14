@@ -49,6 +49,8 @@ const JADE = [
   "registered", "confirmed", "joined", "offer accepted", "exempt", "exempted", "done",
   "submitted to acca", "reconciled", "matched", "healthy", "ready", "placed", "hired",
   "attended", "success", "sent", "delivered", "connected", "enabled",
+  "answered", "graded", "returned", "improved", "accepted", "actioned", "issued", "mapped",
+  "enforced", "processed", "decided", "results released", "read", "full", "offer",
 ];
 const AMBER = [
   "due", "due soon", "pending", "in review", "under review", "scheduled", "estimated",
@@ -57,23 +59,29 @@ const AMBER = [
   "on hold", "borderline", "medium", "needs attention", "reattempt", "revision",
   "awaiting approval", "submitted for review", "unmatched", "partial", "offer made",
   "action needed", "expiring", "invited", "watch",
+  "to grade", "attention", "investigating", "requested", "waiting on student",
+  "changes requested", "outdated", "callback", "nearly ready",
 ];
 const ROSE = [
   "failed", "fail", "overdue", "escalated", "at risk", "rejected", "absent", "inactive",
   "cancelled", "canceled", "blocked", "missed", "suspended", "expired", "not eligible",
   "flagged", "high", "high risk", "critical", "declined", "breached", "withdrawn",
   "dropped", "unpaid", "error", "disconnected", "misconduct", "offer declined",
+  "mismatch", "worsened", "denied", "not paid",
 ];
 const NEUTRAL = [
   "draft", "not started", "archived", "closed", "planned", "unregistered", "none",
   "not claimed", "locked", "inactive user", "disabled", "low", "n/a", "not booked",
   "unbooked", "refunded", "alumni", "paused",
+  "not registered", "not due", "not required", "not applicable", "entry not open",
+  "no change", "conceptual only",
 ];
 const INFO = [
   "in progress", "open", "booked", "enrolled", "shortlisted", "interviewing", "applied",
   "upcoming", "assigned", "queued", "processing", "refund initiated", "new", "screening",
   "interview scheduled", "in class", "running", "recording", "submitted", "current",
   "studying", "internship", "on demand",
+  "ongoing", "today", "monitoring", "revised",
 ];
 const VIOLET = ["ai draft", "assistant", "ai reviewed", "ai"];
 
@@ -96,11 +104,21 @@ export function statusTone(status: string): StatusTone {
   const s = normalise(status);
   const exact = STATUS_TONES[s];
   if (exact) return exact;
+  // A negated state ("Not verified") must not pick up the keyword it negates.
+  if (s.startsWith("not ")) return "neutral";
   if (/fail|overdue|risk|reject|escalat|cancel|miss|block|expir|declin|unpaid/.test(s)) return "rose";
   if (/pending|due|review|estimat|await|schedul|partial|hold/.test(s)) return "amber";
   if (/pass|approv|paid|resolv|verif|complet|publish|confirm|exempt|eligib|regist/.test(s)) return "jade";
   if (/progress|open|book|enrol|shortlist|interview|applied|assign|upcoming/.test(s)) return "info";
   return "neutral";
+}
+
+/** Raw data values read as words: "results-pending" becomes "Results pending".
+ *  Text that already has capitals, digits first or punctuation is shown as given. */
+export function statusLabel(status: string): string {
+  if (!/^[a-z][a-z0-9 _-]*$/.test(status)) return status;
+  const words = status.replace(/[-_]+/g, " ").trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
 export function StatusPill({
@@ -116,7 +134,7 @@ export function StatusPill({
   dot?: boolean;
   size?: "sm" | "md";
   className?: string;
-  /** Optional visible text; `status` still drives the tone. */
+  /** Optional visible text; `status` still drives the tone. Without it, `statusLabel(status)` shows. */
   children?: React.ReactNode;
 }) {
   const t = tone ?? statusTone(status);
@@ -135,7 +153,7 @@ export function StatusPill({
           className={cn("size-1.5 shrink-0 rounded-full", t === "cta" ? "bg-cta-strong" : "bg-current")}
         />
       ) : null}
-      <span className="truncate">{children ?? status}</span>
+      <span className="truncate">{children ?? statusLabel(status)}</span>
     </span>
   );
 }

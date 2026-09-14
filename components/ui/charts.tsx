@@ -144,11 +144,14 @@ export function Sparkline({
   fill?: boolean;
 }) {
   const w = 100;
-  const min = Math.min(...data);
-  const max = Math.max(...data);
+  // A single reading (a learner who has just started) draws as a flat line.
+  const series = data.length === 1 ? [data[0], data[0]] : data;
+  if (!series.length) return null;
+  const min = Math.min(...series);
+  const max = Math.max(...series);
   const span = max - min || 1;
-  const pts = data.map((d, i) => {
-    const x = data.length > 1 ? (i / (data.length - 1)) * w : w / 2;
+  const pts = series.map((d, i) => {
+    const x = (i / (series.length - 1)) * w;
     const y = height - 2 - ((d - min) / span) * (height - 6);
     return [x, y] as const;
   });

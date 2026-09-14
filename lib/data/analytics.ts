@@ -119,12 +119,12 @@ export type UpcomingItem = {
 /* Anaya's next items, from Monday 14 September 2026 to the December session.
    "Compliance" is used for ACCA deadlines, such as exam entry. */
 export const upcoming: UpcomingItem[] = [
-  { id: "up-1", title: "Mentor session with Aisha Khan · PM reattempt plan", kind: "Mentor session", course: "Performance Management (PM)", day: "16", month: "Sep", time: "Wed · 19:00 IST" },
-  { id: "up-2", title: "Live class: group accounts exam technique", kind: "Live session", course: "Financial Reporting (FR)", day: "19", month: "Sep", time: "Sat · 10:00 IST", href: "/learn/financial-reporting-fr", urgent: true },
+  { id: "up-1", title: "Mentor session with Aisha Khan · PM reattempt plan", kind: "Mentor session", course: "Performance Management (PM)", day: "14", month: "Sep", time: "Today · 19:30 IST" },
+  { id: "up-2", title: "Live class: ratio analysis and interpretation", kind: "Live session", course: "Financial Reporting (FR)", day: "19", month: "Sep", time: "Sat · 09:30 IST", href: "/learn/financial-reporting-fr", urgent: true },
   { id: "up-3", title: "Group accounts test", kind: "Graded exam", course: "Financial Reporting (FR)", day: "20", month: "Sep", time: "Due 23:59 IST", href: "/assessments/a-fr-groups" },
   { id: "up-4", title: "Written case: interpreting financial statements", kind: "Assignment", course: "Financial Reporting (FR)", day: "04", month: "Oct", time: "Due 23:59 IST", href: "/assessments/a-fr-case" },
   { id: "up-5", title: "Early entry closes · December 2026 exams", kind: "Compliance", course: "PM reattempt not yet entered", day: "05", month: "Oct", time: "Enter on myACCA" },
-  { id: "up-6", title: "FR mock exam · Dec 2026", kind: "Graded exam", course: "Financial Reporting (FR)", day: "21", month: "Nov", time: "Sat · 10:00 IST", href: "/assessments/a-fr-mock" },
+  { id: "up-6", title: "FR mock exam · Dec 2026", kind: "Graded exam", course: "Financial Reporting (FR)", day: "24", month: "Oct", time: "Sat · 10:00 IST", href: "/assessments/a-fr-mock" },
   { id: "up-7", title: "December 2026 exam session", kind: "Compliance", course: "FR booked · PM reattempt", day: "07", month: "Dec", time: "7 to 10 Dec · results 25 Jan 2027" },
 ];
 

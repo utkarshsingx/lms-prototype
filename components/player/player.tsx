@@ -25,6 +25,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Tabs } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/field";
 import { toast } from "@/components/ui/toast";
+import { useRole } from "@/lib/role";
 import { LessonBullet, LessonTypeIcon } from "@/components/course/lesson-icon";
 import {
   ArticleViewer,
@@ -141,6 +142,7 @@ export function Player({ course }: { course: Course }) {
   const [threads, setThreads] = useState(DISCUSSION);
   const [draft, setDraft] = useState("");
   const [downloaded, setDownloaded] = useState<string[]>([]);
+  const { persona } = useRole();
 
   if (!flat.length) {
     return (
@@ -382,8 +384,8 @@ export function Player({ course }: { course: Course }) {
                             ...t,
                             {
                               id: `q-${t.length + 1}`,
-                              by: "Anaya Rao",
-                              role: "Graduate learner · FR Dec 2026 weekend",
+                              by: persona.name,
+                              role: persona.title,
                               at: "Just now",
                               text: draft.trim(),
                               replies: [],
