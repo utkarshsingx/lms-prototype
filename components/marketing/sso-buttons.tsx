@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { KeyRound } from "lucide-react";
+import { Landmark } from "lucide-react";
 
 function Google() {
   return (
@@ -25,22 +25,39 @@ function Microsoft() {
   );
 }
 
-const base =
-  "flex h-10.5 items-center justify-center gap-2.5 rounded-[var(--radius-md)] border border-line bg-surface text-[13.5px] font-medium text-ink shadow-[var(--shadow-e1)] transition-colors hover:bg-surface-2 hover:border-line-strong";
+export type SsoProvider = "google" | "microsoft" | "university";
 
-export function SsoButtons() {
+const base =
+  "flex h-10.5 items-center justify-center gap-2.5 rounded-[var(--radius-md)] border border-line bg-surface px-3 text-[13.5px] font-semibold text-ink transition-colors hover:border-line-strong hover:bg-cta-soft";
+
+/** Single sign-on options. `onContinue` signs in whoever is selected; without
+ *  it the buttons open the student dashboard. */
+export function SsoButtons({
+  onContinue,
+  disabled,
+}: {
+  onContinue?: (provider: SsoProvider) => void;
+  disabled?: boolean;
+}) {
   const router = useRouter();
-  const go = () => router.push("/dashboard");
+  const go = (provider: SsoProvider) =>
+    onContinue ? onContinue(provider) : router.push("/dashboard");
+
   return (
     <div className="grid gap-2.5 sm:grid-cols-2">
-      <button onClick={go} className={base}>
+      <button type="button" disabled={disabled} onClick={() => go("google")} className={base}>
         <Google /> Google
       </button>
-      <button onClick={go} className={base}>
+      <button type="button" disabled={disabled} onClick={() => go("microsoft")} className={base}>
         <Microsoft /> Microsoft
       </button>
-      <button onClick={go} className={base + " sm:col-span-2"}>
-        <KeyRound className="size-4 text-ink-3" /> Continue with SAML single sign-on
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => go("university")}
+        className={base + " sm:col-span-2"}
+      >
+        <Landmark className="size-4 text-ink-2" /> Continue with university single sign-on
       </button>
     </div>
   );
