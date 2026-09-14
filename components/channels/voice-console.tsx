@@ -22,6 +22,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/field";
 import { Segmented } from "@/components/ui/tabs";
+import { toast } from "@/components/ui/toast";
 
 const outcomeTone: Record<VoiceCall["outcome"], Tone> = {
   completed: "jade",
@@ -39,14 +40,20 @@ const outcomeIcon: Record<VoiceCall["outcome"], React.ComponentType<{ className?
   voicemail: Voicemail,
 };
 
-/** A static waveform, seeded from the call id so it does not reshuffle. */
-function Waveform({ seed, active }: { seed: string; active?: boolean }) {
+/** Bar heights seeded from the call id, so a waveform never reshuffles. */
+function waveBars(seed: string): number[] {
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
-  const bars = Array.from({ length: 44 }, (_, i) => {
+  const bars: number[] = [];
+  for (let i = 0; i < 44; i++) {
     h = (h * 1103515245 + 12345) & 0x7fffffff;
-    return 12 + ((h >> (i % 7)) % 88);
-  });
+    bars.push(12 + ((h >> (i % 7)) % 88));
+  }
+  return bars;
+}
+
+function Waveform({ seed, active }: { seed: string; active?: boolean }) {
+  const bars = waveBars(seed);
   return (
     <div className="flex h-8 items-center gap-[2px]">
       {bars.map((b, i) => (
@@ -93,6 +100,7 @@ export function VoiceConsole() {
 
         {shown.map((c) => {
           const p = personById(c.personId);
+          const agentName = c.agent.split(" · ")[0];
           const Icon = outcomeIcon[c.outcome];
           const expanded = open === c.id;
           const mins = `${Math.floor(c.seconds / 60)}:${String(c.seconds % 60).padStart(2, "0")}`;
@@ -181,7 +189,7 @@ export function VoiceConsole() {
                             <div className="min-w-0 flex-1">
                               <p className="flex items-baseline gap-2">
                                 <span className="text-[11.5px] font-semibold text-ink-2">
-                                  {t.speaker === "agent" ? "Nova" : p?.name.split(" ")[0]}
+                                  {t.speaker === "agent" ? agentName : p?.name.split(" ")[0]}
                                 </span>
                                 <span className="font-mono text-[10.5px] text-ink-3 tnum">
                                   {t.at}
@@ -197,7 +205,7 @@ export function VoiceConsole() {
 
                       <div className="border-t border-line bg-surface-2 p-5 lg:border-t-0 lg:border-l">
                         <p className="text-[11px] font-semibold tracking-[0.12em] text-ink-3 uppercase">
-                          What the agent changed
+                          What the agent updated
                         </p>
                         <ul className="mt-3 space-y-2.5">
                           {c.effects.map((e) => (
@@ -210,16 +218,16 @@ export function VoiceConsole() {
                           ))}
                         </ul>
                         <p className="mt-4 border-t border-line pt-3 text-[11.5px] leading-relaxed text-ink-3">
-                          Sentiment: {c.sentiment}. Every state change above is
-                          written to the learner&rsquo;s audit trail with the call
-                          id attached.
+                          Sentiment: {c.sentiment}. Every update above is written
+                          to the learner&rsquo;s record and the audit log, with
+                          the call attached.
                         </p>
                       </div>
                     </div>
                   ) : (
                     <div className="p-5">
                       <p className="text-[13px] text-ink-3">
-                        No transcript — the call was not answered.{" "}
+                        No transcript: the call was not answered.{" "}
                         {c.effects.join(". ")}.
                       </p>
                     </div>
@@ -234,8 +242,8 @@ export function VoiceConsole() {
       <aside className="space-y-4 xl:sticky xl:top-20 xl:self-start">
         <Card>
           <CardHeader
-            title="Nova"
-            sub="The outbound agent"
+            title="Voice agent"
+            sub="Outbound calls for the programme team"
             action={<Badge tone="jade" dot>Live</Badge>}
           />
           <div className="space-y-3.5 border-t border-line px-5 py-4">
@@ -247,18 +255,18 @@ export function VoiceConsole() {
                 <p className="flex items-center gap-1.5 text-[12.5px] font-medium text-ink">
                   <LiveDot /> 3 calls in progress
                 </p>
-                <p className="mt-0.5 text-[11.5px] text-ink-3 tnum">
-                  611 placed in the last 7 days
+                <p className="mt-0.5 text-[11.5px] text-ink-3">
+                  Exam entry, fee and class reminders
                 </p>
               </div>
             </div>
 
             <dl className="space-y-2 text-[12.5px]">
               {[
-                ["Voice", "Aria · warm, unhurried"],
-                ["Languages", "English, Hindi"],
-                ["Median latency", "310 ms"],
-                ["Interruption handling", "Barge-in enabled"],
+                ["Voice", "Indian English, warm and unhurried"],
+                ["Languages", "English, Hindi, Marathi, Malayalam"],
+                ["Response time", "Under half a second"],
+                ["Interruptions", "Learner can cut in at any time"],
               ].map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-3">
                   <dt className="text-ink-3">{k}</dt>
@@ -268,7 +276,7 @@ export function VoiceConsole() {
             </dl>
 
             <Button variant="secondary" size="sm" className="w-full">
-              Edit agent script
+              Edit call script
             </Button>
           </div>
         </Card>
@@ -276,14 +284,21 @@ export function VoiceConsole() {
         <Card>
           <CardHeader
             title="Guardrails"
-            sub="These are the reason this is safe to run"
+            sub="What the agent may say to a learner, and when it stops"
           />
           <div className="space-y-4 border-t border-line px-5 py-4">
             {voiceGuardrails.map((g) => (
               <Switch
                 key={g.id}
                 checked={guards[g.id]}
-                onChange={(v) => setGuards((s) => ({ ...s, [g.id]: v }))}
+                onChange={(v) => {
+                  setGuards((s) => ({ ...s, [g.id]: v }));
+                  toast({
+                    title: `${g.label} ${v ? "turned on" : "turned off"}`,
+                    body: "Applies from the next call placed.",
+                    tone: v ? "success" : "warning",
+                  });
+                }}
                 label={g.label}
                 sub={g.value}
               />

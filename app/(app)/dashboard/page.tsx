@@ -25,7 +25,7 @@ import { Greeting } from "@/components/dashboard/greeting";
 import { MyLearningTabs } from "@/components/dashboard/my-learning-tabs";
 import { cn } from "@/lib/cn";
 
-export const metadata = { title: "Home" };
+export const metadata = { title: "Dashboard" };
 
 const kindIcon: Record<UpcomingItem["kind"], typeof Radio> = {
   "Live session": Radio,
@@ -52,7 +52,7 @@ export default function DashboardPage() {
         <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-[12.5px] font-medium text-ink shadow-[var(--shadow-e1)]">
           <Flame className="size-4 text-ember" />
           <span className="tnum">{currentUser.streak}</span>
-          <span className="text-ink-3">day streak</span>
+          <span className="text-ink-3">day study streak</span>
         </span>
       </header>
 
@@ -69,7 +69,7 @@ export default function DashboardPage() {
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-semibold tracking-[0.13em] text-ink-3 uppercase">
-            Continue learning
+            Continue studying
           </p>
           <h2 className="mt-1.5 font-display text-[clamp(1.3rem,1.1rem+0.7vw,1.7rem)] leading-[1.15] tracking-[var(--display-tracking)] text-ink">
             {next.title}
@@ -80,7 +80,7 @@ export default function DashboardPage() {
           <div className="mt-3.5 flex items-center gap-3">
             <Progress value={hero.progress!} height={5} className="w-full max-w-72" />
             <span className="shrink-0 text-[12px] text-ink-3 tnum">
-              {hero.progress}% · {done} of {lessonCount(hero)} lessons
+              {hero.progress}% of the paper · {done} of {lessonCount(hero)} lessons
             </span>
           </div>
         </div>
@@ -94,7 +94,7 @@ export default function DashboardPage() {
         <MyLearningTabs />
 
         <Card className="overflow-hidden">
-          <CardHeader title="Coming up" sub="Sessions and deadlines" />
+          <CardHeader title="Coming up" sub="Classes, deadlines and exam entry" />
           <ul className="divide-y divide-[var(--line)] border-t border-line">
             {upcoming.slice(0, 4).map((u) => {
               const Icon = kindIcon[u.kind];
@@ -149,10 +149,10 @@ export default function DashboardPage() {
           </ul>
           <div className="border-t border-line px-5 py-3">
             <Link
-              href="/progress"
+              href="/readiness"
               className="inline-flex items-center gap-1 text-[12.5px] font-medium text-brand hover:underline"
             >
-              Your progress report <ArrowRight className="size-3.5" />
+              Your readiness score <ArrowRight className="size-3.5" />
             </Link>
           </div>
         </Card>

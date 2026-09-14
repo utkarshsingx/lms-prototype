@@ -16,17 +16,19 @@ import { Tabs } from "@/components/ui/tabs";
 import { Badge, type Tone } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 
-/* The learner's standing on each open assessment. Mirrors the history table on
-   /assessments so the two pages never disagree. */
+/* Anaya's standing on each open assessment. Mirrors the attempt history on
+   /mocks and /exams so the pages never disagree. */
 const MY_ATTEMPTS: Record<string, { used: number; label: string; tone: Tone; order: number }> = {
-  "a-privacy-final": { used: 1, label: "In progress", tone: "brand", order: 0 },
-  "a-dist-consensus": { used: 1, label: "Retake available", tone: "amber", order: 1 },
-  "a-llm-retrieval": { used: 1, label: "Completed · 94%", tone: "jade", order: 3 },
-  "a-sec-final": { used: 1, label: "Completed · 93%", tone: "jade", order: 3 },
+  "a-fr-mock": { used: 1, label: "In progress", tone: "brand", order: 0 },
+  "a-fr-groups": { used: 1, label: "Retake available", tone: "amber", order: 1 },
+  "a-pm-budgeting": { used: 1, label: "Completed · 94%", tone: "jade", order: 3 },
+  "a-epsm-final": { used: 1, label: "Completed · 93%", tone: "jade", order: 3 },
 };
 const NOT_STARTED = { used: 0, label: "Yet to start", tone: "neutral" as Tone, order: 2 };
 
-const myPathIds = ["p-backend", "p-compliance"];
+const myPathIds = ["p-dec-2026", "p-applied-skills"];
+/** Papers Anaya is exempt from count as done on a programme. */
+const EXEMPT = new Set(["c-bt", "c-ma", "c-fa", "c-lw"]);
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
@@ -103,7 +105,9 @@ export function MyLearningTabs() {
     .filter((p) => myPathIds.includes(p.id))
     .map((p) => {
       const required = p.steps.filter((s) => s.required);
-      const progress = required.map((s) => courseById(s.courseId)?.progress ?? 0);
+      const progress = required.map((s) =>
+        EXEMPT.has(s.courseId) ? 100 : (courseById(s.courseId)?.progress ?? 0),
+      );
       return {
         path: p,
         required: required.length,
@@ -121,9 +125,9 @@ export function MyLearningTabs() {
   const outstanding = mine.filter((m) => !m.me.label.startsWith("Completed")).length;
 
   const footer = {
-    courses: { href: "/my-learning", label: `View all ${enrolledCourses.length} courses` },
-    programs: { href: "/paths", label: "Browse learning paths" },
-    assessments: { href: "/assessments", label: "View all assessments" },
+    courses: { href: "/papers", label: `View all ${enrolledCourses.length} papers` },
+    programs: { href: "/journey", label: "Your ACCA journey" },
+    assessments: { href: "/mocks", label: "View mock exams" },
   }[tab]!;
 
   return (
@@ -133,9 +137,9 @@ export function MyLearningTabs() {
           value={tab}
           onChange={setTab}
           items={[
-            { id: "courses", label: "Courses", count: inProgress.length },
-            { id: "programs", label: "Programs", count: programs.length },
-            { id: "assessments", label: "Assessments", count: outstanding },
+            { id: "courses", label: "Papers", count: inProgress.length },
+            { id: "programs", label: "Programmes", count: programs.length },
+            { id: "assessments", label: "Tests and mocks", count: outstanding },
           ]}
         />
       </div>
@@ -152,10 +156,10 @@ export function MyLearningTabs() {
                   </Chip>
                 }
                 title={c.title}
-                meta={`${c.hours} learning hrs · ${plural(
+                meta={`${c.category} · ${c.hours} study hrs · ${plural(
                   graded.filter((a) => a.courseId === c.id).length,
                   "assessment",
-                )} · ${c.level}`}
+                )}`}
                 aside={<Meter value={c.progress!} label={`${c.progress}% completed`} />}
               />
             ))
@@ -165,14 +169,14 @@ export function MyLearningTabs() {
           ? programs.map(({ path, required, done, value }) => (
               <Row
                 key={path.id}
-                href={`/paths/${path.slug}`}
+                href="/journey"
                 icon={
                   <Chip accent={path.accent}>
                     <Route />
                   </Chip>
                 }
                 title={path.title}
-                meta={`${path.kind} path · ${done} of ${required} required courses done · ${path.weeks} weeks`}
+                meta={`${path.kind} · ${done} of ${required} required papers done · ${path.weeks} weeks`}
                 aside={<Meter value={value} label={`${value}% completed`} />}
               />
             ))

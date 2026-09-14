@@ -1,6 +1,6 @@
 import { Forum } from "@/components/discussions/forum";
 
-export const metadata = { title: "Discussions" };
+export const metadata = { title: "Community" };
 
 export default function DiscussionsPage() {
   return (

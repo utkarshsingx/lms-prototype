@@ -21,34 +21,75 @@ import {
 } from "lucide-react";
 import type { Course, Lesson, LessonType, Module } from "@/lib/data";
 import { lessonTypeLabel, personById } from "@/lib/data";
+import { useRole } from "@/lib/role";
 import { cn } from "@/lib/cn";
 import { Badge, type Tone } from "@/components/ui/badge";
-import { Button, IconButton } from "@/components/ui/button";
+import { Button, IconButton, LinkButton } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import { Field, Input, Select, Switch, Textarea } from "@/components/ui/field";
 import { Avatar } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { LessonTypeIcon } from "@/components/course/lesson-icon";
+import { toast } from "@/components/ui/toast";
 
 const TYPES: LessonType[] = [
   "video",
   "article",
   "pdf",
   "slides",
-  "scorm",
-  "xapi",
   "quiz",
   "assignment",
   "lab",
   "live",
 ];
 
-const VERSIONS = [
-  { v: "v4.2", at: "12 Aug 2026", by: "Marcus Bell", note: "Rewrote module 3 labs against Raft 2024 errata", live: true },
-  { v: "v4.1", at: "28 Jun 2026", by: "Marcus Bell", note: "Added the operating module and the runbook exercise" },
-  { v: "v4.0", at: "02 Mar 2026", by: "Priya Menon", note: "Restructured around incidents rather than papers" },
-  { v: "v3.6", at: "19 Nov 2025", by: "Marcus Bell", note: "Replaced the consensus video after the audio complaint" },
+const CATEGORIES = [
+  "Applied Knowledge",
+  "Applied Skills",
+  "Strategic Professional",
+  "Professional requirements",
+  "Exam preparation",
+];
+
+/** Version notes for a paper. ACCA syllabus years run September to August, so
+ *  the live version is the one aligned to the current syllabus year. */
+function versionsFor(code: string, author: string, reviewer: string) {
+  return [
+    {
+      v: "v4.2",
+      at: "2 Sep 2026",
+      by: author,
+      note: `Aligned ${code} to the September 2026 to August 2027 syllabus and added the June 2026 examiner's report`,
+      live: true,
+    },
+    {
+      v: "v4.1",
+      at: "20 Jul 2026",
+      by: reviewer,
+      note: "Added model answers to every constructed-response question and corrected two outdated standards references",
+    },
+    {
+      v: "v4.0",
+      at: "3 Mar 2026",
+      by: author,
+      note: "Mapped lessons to Brightwater and Coastline B.Com subjects and created the university variant",
+    },
+    {
+      v: "v3.6",
+      at: "18 Nov 2025",
+      by: author,
+      note: "Replaced the module 2 video after learner feedback on audio quality and added a transcript",
+    },
+  ];
+}
+
+const LEARNERS: [name: string, cohort: string, pct: number, seen: string, status: string][] = [
+  ["Anaya Rao", "Weekend · Dec 2026", 62, "2 hours ago", "On track"],
+  ["Kavya Nambiar", "Weekend · Dec 2026", 81, "Yesterday", "On track"],
+  ["Aditya Kulkarni", "Weekday evening · Dec 2026", 34, "6 days ago", "Stalled"],
+  ["Sneha Reddy", "Fast Track · Dec 2026", 100, "1 week ago", "Complete"],
+  ["Farhan Qureshi", "Revision · Dec 2026", 12, "19 days ago", "At risk"],
 ];
 
 export function CourseBuilder({ course }: { course: Course }) {
@@ -57,7 +98,13 @@ export function CourseBuilder({ course }: { course: Course }) {
   const [saved, setSaved] = useState(true);
   const [title, setTitle] = useState(course.title);
 
+  const { can } = useRole();
+  const canPublish = can("content:publish");
   const author = personById(course.instructorId);
+  const authorName = author?.name ?? "Marcus Bell";
+  const reviewer = authorName === "Marcus Bell" ? "Hana Suzuki" : "Marcus Bell";
+  const code = course.id.replace(/^c-/, "").toUpperCase();
+  const VERSIONS = versionsFor(code, authorName, reviewer);
   const lessons = modules.flatMap((m) => m.lessons);
   const minutes = lessons.reduce((n, l) => n + l.minutes, 0);
 
@@ -146,16 +193,16 @@ export function CourseBuilder({ course }: { course: Course }) {
     { label: "At least three modules", ok: modules.length >= 3 },
     { label: "Every module has a lesson", ok: modules.every((m) => m.lessons.length > 0) },
     { label: "Learning outcomes listed", ok: course.outcomes.length >= 3 },
-    { label: "An assessment attached", ok: lessons.some((l) => l.type === "quiz") },
-    { label: "Accessibility review signed off", ok: course.status === "published" },
+    { label: "A quiz or mock attached", ok: lessons.some((l) => l.type === "quiz") },
+    { label: "Academic review signed off", ok: course.status === "published" },
   ];
   const ready = checklist.filter((c) => c.ok).length;
 
   return (
     <div className="mx-auto max-w-[86rem] space-y-6">
       <nav className="flex items-center gap-1.5 text-[12.5px] text-ink-3">
-        <Link href="/studio" className="hover:text-ink">
-          Course studio
+        <Link href="/faculty/content" className="hover:text-ink">
+          Content studio
         </Link>
         <span>/</span>
         <span className="truncate">{course.title}</span>
@@ -192,7 +239,7 @@ export function CourseBuilder({ course }: { course: Course }) {
             <span
               className={cn(
                 "inline-flex items-center gap-1.5",
-                saved ? "text-ink-3" : "text-brand",
+                saved ? "text-ink-3" : "text-ink",
               )}
             >
               <Cloud className="size-3.5" />
@@ -201,12 +248,33 @@ export function CourseBuilder({ course }: { course: Course }) {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
-          <Button variant="secondary" size="sm">
+          <LinkButton href={`/courses/${course.slug}`} variant="outline" size="sm">
             <Eye className="size-3.5" /> Preview as learner
-          </Button>
-          <Button size="sm">
+          </LinkButton>
+          <Button
+            size="sm"
+            title={canPublish ? undefined : "Your role submits content for review. A faculty member with publish rights approves it."}
+            onClick={() =>
+              toast(
+                canPublish
+                  ? {
+                      title: "Changes published",
+                      body: `${title} v4.3 is live. Learners mid-attempt finish on v4.2.`,
+                    }
+                  : {
+                      title: "Submitted for review",
+                      body: `${reviewer} is asked to review ${title}.`,
+                      tone: "info",
+                    },
+              )
+            }
+          >
             <Upload className="size-3.5" />
-            {course.status === "published" ? "Publish changes" : "Submit for review"}
+            {!canPublish
+              ? "Submit for review"
+              : course.status === "published"
+                ? "Publish changes"
+                : "Publish"}
           </Button>
         </div>
       </div>
@@ -288,9 +356,9 @@ export function CourseBuilder({ course }: { course: Course }) {
                               }
                               className="shrink-0 cursor-pointer rounded-[var(--radius-xs)] border border-line bg-surface px-2 py-1 text-[12px] text-ink-2 focus:border-brand focus:outline-none"
                             >
-                              {TYPES.map((t) => (
+                              {(TYPES.includes(l.type) ? TYPES : [l.type, ...TYPES]).map((t) => (
                                 <option key={t} value={t}>
-                                  {lessonTypeLabel[t]}
+                                  {t === "lab" ? "CBE workspace" : lessonTypeLabel[t]}
                                 </option>
                               ))}
                             </select>
@@ -347,8 +415,17 @@ export function CourseBuilder({ course }: { course: Course }) {
                       >
                         <Plus className="size-3.5" /> Add lesson
                       </Button>
-                      <Button variant="ghost" size="xs">
-                        <Upload className="size-3.5" /> Upload SCORM package
+                      <Button
+                        variant="ghost"
+                        size="xs"
+                        onClick={() =>
+                          toast({
+                            title: "Study material uploaded",
+                            body: `Added to module ${mi + 1}: ${m.title}`,
+                          })
+                        }
+                      >
+                        <Upload className="size-3.5" /> Upload study material
                       </Button>
                       <Button variant="ghost" size="xs">
                         <Plus className="size-3.5" /> Add quiz
@@ -360,7 +437,7 @@ export function CourseBuilder({ course }: { course: Course }) {
 
               <button
                 onClick={addModule}
-                className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-lg)] border border-dashed border-line-strong bg-surface py-4 text-[13.5px] font-medium text-ink-2 transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand"
+                className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-lg)] border border-dashed border-line-strong bg-surface py-4 text-[13.5px] font-medium text-ink-2 transition-colors hover:border-cta-strong hover:bg-cta-soft hover:text-ink"
               >
                 <Plus className="size-4" /> Add module
               </button>
@@ -369,23 +446,24 @@ export function CourseBuilder({ course }: { course: Course }) {
 
           {tab === "details" ? (
             <Card className="space-y-5 p-5 sm:p-6">
-              <Field label="Subtitle" hint="One line, shown under the title">
+              <Field label="Subtitle" hint="One line, shown under the paper name">
                 <Input defaultValue={course.subtitle} onChange={touch} />
               </Field>
               <Field label="Summary">
                 <Textarea rows={4} defaultValue={course.summary} onChange={touch} />
               </Field>
               <div className="grid gap-5 sm:grid-cols-3">
-                <Field label="Category">
+                <Field label="ACCA level">
                   <Select defaultValue={course.category} onChange={touch}>
-                    {["Engineering", "AI & Data", "Design", "Security", "Compliance", "Leadership", "Onboarding", "Revenue"].map(
-                      (c) => (
-                        <option key={c}>{c}</option>
-                      ),
-                    )}
+                    {(CATEGORIES.includes(course.category)
+                      ? CATEGORIES
+                      : [course.category, ...CATEGORIES]
+                    ).map((c) => (
+                      <option key={c}>{c}</option>
+                    ))}
                   </Select>
                 </Field>
-                <Field label="Level">
+                <Field label="Difficulty">
                   <Select defaultValue={course.level} onChange={touch}>
                     {["Foundational", "Intermediate", "Advanced"].map((l) => (
                       <option key={l}>{l}</option>
@@ -400,14 +478,14 @@ export function CourseBuilder({ course }: { course: Course }) {
                   </Select>
                 </Field>
               </div>
-              <Field label="Learning outcomes" hint="One per line">
+              <Field label="Learning outcomes" hint="One per line, in the syllabus wording">
                 <Textarea
                   rows={5}
                   defaultValue={course.outcomes.join("\n")}
                   onChange={touch}
                 />
               </Field>
-              <Field label="Requirements" hint="One per line">
+              <Field label="Before you start" hint="One per line, for example papers passed or exempt">
                 <Textarea
                   rows={3}
                   defaultValue={course.requirements.join("\n")}
@@ -420,25 +498,25 @@ export function CourseBuilder({ course }: { course: Course }) {
           {tab === "settings" ? (
             <div className="space-y-4">
               <Card>
-                <CardHeader title="Enrolment" sub="Who gets on this course and how" />
+                <CardHeader title="Access" sub="Who sees this paper and where" />
                 <div className="space-y-4 border-t border-line px-5 py-4">
                   <Switch
                     checked
                     onChange={touch}
-                    label="Open to self-enrolment"
-                    sub="Anyone in the workspace can start it from the catalog"
+                    label="Visible to cohort learners"
+                    sub="Learners in a cohort for this paper see it on their Papers page"
                   />
                   <Switch
-                    checked={!!course.compliance?.mandatory}
+                    checked
                     onChange={touch}
-                    label="Mandatory"
-                    sub="Auto-assigned with a deadline; appears in compliance reporting"
+                    label="Include in university programmes"
+                    sub="Partner university cohorts get it at the semester set in their roadmap"
                   />
                   <Switch
                     checked={course.certificate}
                     onChange={touch}
                     label="Issue a certificate"
-                    sub="On completion of every required lesson plus a passing assessment"
+                    sub="On completing every required lesson and passing the paper's mock exam"
                   />
                   <Switch
                     checked={false}
@@ -452,7 +530,7 @@ export function CourseBuilder({ course }: { course: Course }) {
               <Card>
                 <CardHeader
                   title="Completion criteria"
-                  sub="What has to be true before this course counts as done"
+                  sub="What has to be true before this paper counts as complete"
                 />
                 <div className="space-y-4 border-t border-line px-5 py-4">
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -463,15 +541,15 @@ export function CourseBuilder({ course }: { course: Course }) {
                         ))}
                       </Select>
                     </Field>
-                    <Field label="Assessment pass mark">
-                      <Input type="number" defaultValue={70} onChange={touch} />
+                    <Field label="Mock exam pass mark">
+                      <Input type="number" defaultValue={50} onChange={touch} />
                     </Field>
                   </div>
                   <Switch
                     checked
                     onChange={touch}
-                    label="Recertification required"
-                    sub={`Learners retake this every ${course.compliance?.recertifyMonths || 12} months`}
+                    label="Review for each syllabus year"
+                    sub="Flags this paper for review every September, when the new ACCA syllabus year starts"
                   />
                 </div>
               </Card>
@@ -479,16 +557,16 @@ export function CourseBuilder({ course }: { course: Course }) {
               <Card>
                 <CardHeader
                   title="Reminders"
-                  sub="Which channels may chase a learner on this course"
+                  sub="Which channels may remind a learner about this paper"
                 />
                 <div className="space-y-4 border-t border-line px-5 py-4">
-                  <Switch checked onChange={touch} label="Email" sub="Deadline reminders at 14, 7 and 1 days" />
-                  <Switch checked onChange={touch} label="WhatsApp" sub="Utility template only, opted-in numbers" />
+                  <Switch checked onChange={touch} label="Email" sub="Class and submission reminders at 7 days and 1 day" />
+                  <Switch checked onChange={touch} label="WhatsApp" sub="Approved templates only, opted-in numbers" />
                   <Switch
-                    checked={!!course.compliance?.mandatory}
+                    checked={false}
                     onChange={touch}
                     label="Voice agent"
-                    sub="Outbound call at 14 days remaining, weekdays 09:00–18:00 learner-local"
+                    sub="A call before each exam entry window closes, weekdays 09:00 to 18:00"
                   />
                 </div>
               </Card>
@@ -499,17 +577,18 @@ export function CourseBuilder({ course }: { course: Course }) {
             <Card className="overflow-hidden">
               <CardHeader
                 title={`${course.enrolled.toLocaleString()} enrolled`}
-                sub="Progress is per learner; scores stay with the instructor"
+                sub="Progress per learner. Marks stay with faculty and the learner's mentor."
                 action={
                   <Button variant="secondary" size="xs">
-                    <Users className="size-3.5" /> Export CSV
+                    <Users className="size-3.5" /> Export list
                   </Button>
                 }
               />
-              <table className="w-full border-t border-line">
+              <div className="overflow-x-auto border-t border-line">
+              <table className="w-full min-w-[40rem]">
                 <thead>
-                  <tr className="border-b border-line text-left">
-                    {["Learner", "Department", "Progress", "Last active", "Status"].map(
+                  <tr className="border-b border-line bg-surface-2 text-left">
+                    {["Learner", "Batch", "Progress", "Last active", "Status"].map(
                       (h) => (
                         <th
                           key={h}
@@ -522,27 +601,21 @@ export function CourseBuilder({ course }: { course: Course }) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--line)]">
-                  {[
-                    ["Anaya Rao", "Engineering", 62, "2 hours ago", "On track"],
-                    ["Daniel Okonkwo", "Engineering", 88, "Yesterday", "On track"],
-                    ["Arjun Nair", "Engineering", 34, "6 days ago", "Stalled"],
-                    ["Grace Whitfield", "Engineering", 100, "1 week ago", "Complete"],
-                    ["Yusuf Karim", "Data", 12, "21 days ago", "At risk"],
-                  ].map(([name, dept, pct, seen, status]) => (
-                    <tr key={name as string} className="hover:bg-surface-2">
+                  {LEARNERS.map(([name, batch, pct, seen, status]) => (
+                    <tr key={name} className="hover:bg-cta-soft">
                       <td className="px-5 py-3">
                         <span className="flex items-center gap-2.5">
-                          <Avatar name={name as string} size="xs" />
+                          <Avatar name={name} size="xs" />
                           <span className="text-[13px] font-medium text-ink">
                             {name}
                           </span>
                         </span>
                       </td>
-                      <td className="px-5 py-3 text-[12.5px] text-ink-3">{dept}</td>
+                      <td className="px-5 py-3 text-[12.5px] whitespace-nowrap text-ink-3">{batch}</td>
                       <td className="px-5 py-3">
                         <span className="flex items-center gap-2.5">
                           <Progress
-                            value={pct as number}
+                            value={pct}
                             className="w-20"
                             height={5}
                             tone={pct === 100 ? "jade" : "brand"}
@@ -571,6 +644,7 @@ export function CourseBuilder({ course }: { course: Course }) {
                   ))}
                 </tbody>
               </table>
+              </div>
             </Card>
           ) : null}
 
@@ -662,15 +736,22 @@ export function CourseBuilder({ course }: { course: Course }) {
                 </div>
               ) : null}
               <div className="mt-3.5 flex items-center gap-3 border-t border-line pt-3.5">
-                <Avatar name="Priya Menon" size="md" />
+                <Avatar name={reviewer} size="md" />
                 <div className="min-w-0">
                   <p className="truncate text-[13px] font-medium text-ink">
-                    Priya Menon
+                    {reviewer}
                   </p>
                   <p className="truncate text-[11.5px] text-ink-3">Reviewer</p>
                 </div>
               </div>
-              <Button variant="secondary" size="sm" className="mt-4 w-full">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="mt-4 w-full"
+                onClick={() =>
+                  toast({ title: "Collaborator invited", body: "Grace Whitfield can now edit this paper." })
+                }
+              >
                 <Plus className="size-3.5" /> Add collaborator
               </Button>
             </div>
@@ -678,17 +759,28 @@ export function CourseBuilder({ course }: { course: Course }) {
 
           <Card className="p-4">
             <p className="flex items-center gap-2 text-[12px] font-medium text-ink-2">
-              <Settings2 className="size-3.5" /> Danger zone
+              <Settings2 className="size-3.5" /> Paper status
             </p>
             <div className="mt-3 space-y-2">
-              <Button variant="secondary" size="sm" className="w-full">
-                Archive course
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() =>
+                  toast({
+                    title: "Archive request sent",
+                    body: "The academic lead confirms before a paper leaves learners' Papers page.",
+                    tone: "warning",
+                  })
+                }
+              >
+                Archive paper
               </Button>
               <Link
                 href={`/courses/${course.slug}`}
                 className="flex items-center justify-center gap-1.5 text-[12.5px] font-medium text-brand hover:underline"
               >
-                View public page <ArrowUpRight className="size-3.5" />
+                View as learner <ArrowUpRight className="size-3.5" />
               </Link>
             </div>
           </Card>

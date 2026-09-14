@@ -40,6 +40,7 @@ import { Input, Label, Select, Textarea } from "@/components/ui/field";
 import { Drawer, Modal } from "@/components/ui/modal";
 import { EmptyState, PageHeader } from "@/components/ui/misc";
 import { RichText } from "@/components/assistant/rich-text";
+import { toast } from "@/components/ui/toast";
 
 type TabId = "all" | "mine" | "unanswered";
 type SortId = "newest" | "activity" | "votes";
@@ -55,7 +56,7 @@ const EMPTY_DRAFT: AskDraft = { title: "", courseId: "", body: "", tags: "" };
 const ASK_FORM_ID = "ask-question-form";
 
 const STATUS_LABEL: Record<ThreadStatus, string> = {
-  instructor: "Instructor answered",
+  instructor: "Faculty answered",
   peer: "Peer answered",
   unanswered: "Unanswered",
 };
@@ -215,6 +216,10 @@ export function Forum() {
     setSort((s) => (s === "votes" ? "newest" : s));
     setFreshId(thread.id);
     setAskOpen(false);
+    toast({
+      title: "Question posted",
+      body: "Your cohort and the paper's faculty can see it now.",
+    });
   }
 
   function postReply(threadId: string) {
@@ -240,6 +245,7 @@ export function Forum() {
       ),
     );
     setReplies((r) => ({ ...r, [threadId]: "" }));
+    toast({ title: "Answer posted" });
   }
 
   const total = counts[tab];
@@ -247,9 +253,9 @@ export function Forum() {
   return (
     <>
       <PageHeader
-        eyebrow="Community"
-        title="Ask the cohort"
-        sub="Peers and course instructors answer here, and any answer an instructor has verified is marked, so you can tell at a glance which ones to trust."
+        eyebrow="Help"
+        title="Community"
+        sub="Ask about any of your papers. Learners and faculty answer here, and an answer the paper's faculty has verified is marked, so you can tell at a glance which ones to trust."
         actions={
           <Button onClick={() => openAsk()}>
             <Plus className="size-4" /> Ask a question
@@ -275,18 +281,18 @@ export function Forum() {
               icon={<Search />}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search questions, tags and people"
+              placeholder="Search questions, topics and people"
               aria-label="Search discussions"
             />
           </div>
           <div className="flex min-w-0 flex-wrap items-center gap-3">
             <div className="w-full min-w-0 sm:w-64">
               <Select
-                aria-label="Filter by course"
+                aria-label="Filter by paper"
                 value={courseFilter}
                 onChange={(e) => setCourseFilter(e.target.value)}
               >
-                <option value="all">All courses</option>
+                <option value="all">All papers</option>
                 {threadCourses.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.title}
@@ -322,7 +328,7 @@ export function Forum() {
             </button>
           ) : (
             <p className="text-[12px] text-ink-3">
-              Instructor median reply time: 6 hours
+              Faculty median reply time: 6 hours
             </p>
           )}
         </div>
@@ -332,7 +338,7 @@ export function Forum() {
             <EmptyState
               icon={<SearchX />}
               title="No questions match"
-              sub="Try fewer words or another course. If nobody has asked it yet, you can be the first."
+              sub="Try fewer words or another paper. If nobody has asked it yet, you can be the first."
               action={
                 <div className="flex flex-wrap justify-center gap-2.5">
                   <Button variant="secondary" size="sm" onClick={clearFilters}>
@@ -348,7 +354,7 @@ export function Forum() {
             <EmptyState
               icon={<MessageSquare />}
               title="You have not asked anything yet"
-              sub="Questions you ask in any course collect here, along with every answer they get."
+              sub="Questions you ask on any paper collect here, along with every answer they get."
               action={
                 <Button size="sm" onClick={() => openAsk()}>
                   <Plus className="size-3.5" /> Ask a question
@@ -365,7 +371,7 @@ export function Forum() {
             <EmptyState
               icon={<MessageSquare />}
               title="No questions yet"
-              sub="The first question in a course is usually the one everyone else was wondering about."
+              sub="The first question on a paper is usually the one everyone else was wondering about."
             />
           )
         ) : (
@@ -391,7 +397,7 @@ export function Forum() {
         open={askOpen}
         onClose={closeAsk}
         title="Ask a question"
-        sub="Your cohort sees it straight away, and the course instructor is notified."
+        sub="Your cohort sees it straight away, and the faculty for the paper is notified."
         width="max-w-xl"
         footer={
           <>
@@ -471,7 +477,7 @@ function ThreadRow({
     <li
       className={cn(
         "relative flex gap-4 px-4 py-4 transition-colors hover:bg-surface-2/60 sm:px-5",
-        fresh && "bg-brand-soft/50",
+        fresh && "bg-cta-soft",
       )}
     >
       {/* Meta column. Below sm it collapses into the inline row further down. */}
@@ -531,7 +537,7 @@ function ThreadRow({
           <div className="ml-auto flex flex-wrap items-center gap-1.5">
             {thread.assistantDraft ? (
               <Badge tone="violet">
-                <Sparkles className="size-3" aria-hidden /> Assistant draft
+                <Sparkles className="size-3" aria-hidden /> AI tutor draft
               </Badge>
             ) : null}
             <StatusBadge status={status} />
@@ -580,7 +586,7 @@ function VoteButton({
           ? "w-full flex-col rounded-[var(--radius-sm)] py-1 text-[13px] leading-tight"
           : "h-7 gap-1 rounded-[var(--radius-pill)] px-2.5 text-[12px]",
         voted
-          ? "border-brand-line bg-brand-soft text-brand"
+          ? "border-cta bg-cta-soft text-ink"
           : "border-line bg-surface text-ink-2 hover:border-line-strong hover:text-ink",
         className,
       )}
@@ -804,7 +810,7 @@ function ThreadDetail({
           <p className="text-[13px] leading-relaxed text-ink-3">
             No one has answered yet.
             {instructor
-              ? ` ${instructor.name} teaches this course and has been notified.`
+              ? ` ${instructor.name} teaches this paper and has been notified.`
               : ""}
           </p>
         ) : (
@@ -842,7 +848,7 @@ function ThreadDetail({
           rows={3}
           value={reply}
           onChange={(e) => onReplyChange(e.target.value)}
-          placeholder="Share what you know or what you tried. A specific answer helps more than agreement."
+          placeholder="Share your workings or the standard that applies. A specific answer helps more than agreement."
         />
         <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2.5">
           <span className="inline-flex min-w-0 items-center gap-2 text-[12px] text-ink-3">
@@ -892,7 +898,7 @@ function AnswerCard({
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="text-[13px] font-medium text-ink">{name}</span>
             <Badge tone={instructor ? "brand" : "neutral"}>
-              {instructor ? "Instructor" : "Peer"}
+              {instructor ? "Faculty" : "Learner"}
             </Badge>
             <span className="text-[11.5px] text-ink-3">
               {timeAgo(answer.minutesAgo)}
@@ -929,7 +935,7 @@ function AssistantDraft({
         <span className="grid size-6 shrink-0 place-items-center rounded-full border border-violet/30 bg-surface">
           <Sparkles className="size-3.5" aria-hidden />
         </span>
-        Assistant draft · not yet verified by an instructor
+        AI tutor draft · not yet verified by faculty
       </p>
       <div className="mt-2.5 text-[13.5px] leading-relaxed text-ink-2 [overflow-wrap:anywhere]">
         <RichText text={draft.body} />
@@ -948,8 +954,8 @@ function AssistantDraft({
         </div>
       ) : null}
       <p className="mt-3 text-[12px] leading-relaxed text-ink-3">
-        Written from the course material, not by a person. It does not count as
-        an answer and cannot be accepted
+        Written by the AI tutor from the paper&rsquo;s study material, not by a
+        person. It does not count as an answer and cannot be accepted
         {instructorName
           ? `. ${instructorName} can verify, edit or discard it.`
           : "."}
@@ -999,7 +1005,7 @@ function AskForm({
           maxLength={140}
           value={draft.title}
           onChange={(e) => onChange({ title: e.target.value })}
-          placeholder="What exactly are you stuck on?"
+          placeholder="What exactly are you stuck on? For example, NCI at fair value"
         />
         {similar.length > 0 ? (
           <div className="mt-2.5 rounded-[var(--radius-md)] border border-line bg-surface-2 p-2">
@@ -1041,14 +1047,14 @@ function AskForm({
       </div>
 
       <div>
-        <Label htmlFor="ask-course">Course</Label>
+        <Label htmlFor="ask-course">Paper</Label>
         <Select
           id="ask-course"
           value={draft.courseId}
           onChange={(e) => onChange({ courseId: e.target.value })}
         >
           <option value="" disabled>
-            Choose one of your courses
+            Choose one of your papers
           </option>
           {enrolledCourses.map((c) => (
             <option key={c.id} value={c.id}>
@@ -1067,7 +1073,7 @@ function AskForm({
           rows={5}
           value={draft.body}
           onChange={(e) => onChange({ body: e.target.value })}
-          placeholder="What you tried, what you expected and what happened instead. Name the lesson if it came from one."
+          placeholder="Your workings, the answer you expected and where yours differs. Name the lesson or question if it came from one."
         />
       </div>
 
@@ -1079,7 +1085,7 @@ function AskForm({
           id="ask-tags"
           value={draft.tags}
           onChange={(e) => onChange({ tags: e.target.value })}
-          placeholder="Raft, Leader election"
+          placeholder="Goodwill, IFRS 3"
         />
         {tags.length > 0 ? (
           <div className="mt-2 flex flex-wrap gap-1.5">

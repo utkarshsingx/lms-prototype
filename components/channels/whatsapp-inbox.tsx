@@ -29,6 +29,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Segmented } from "@/components/ui/tabs";
 import { Button, IconButton } from "@/components/ui/button";
 import { Select } from "@/components/ui/field";
+import { toast } from "@/components/ui/toast";
 
 type Stage = { label: string; tone: Tone; rank: number };
 
@@ -41,11 +42,19 @@ function stageOf(t: Conversation): Stage {
 
 const approved = whatsappTemplates.filter((t) => t.status === "Approved");
 
+const whatsappThreads = conversations.filter((c) => c.channel === "whatsapp");
+const LIVE_ID =
+  (
+    whatsappThreads.find((c) => c.handledBy === "bot" && c.pending?.length) ??
+    whatsappThreads[0]
+  )?.id ?? "";
+
 /** Sample values so a template preview reads like the message the learner gets. */
 const TEMPLATE_VALUES: Record<string, (first: string) => string[]> = {
-  compliance_due_reminder: (f) => [f, "Privacy", "58", "25"],
-  streak_nudge: (f) => [f, "14"],
-  assignment_graded: () => ["Privacy certification 2026", "passed, 92%"],
+  mock_exam_reminder: (f) => [f, "PM mock exam · Dec 2026", "3"],
+  exam_entry_deadline: (f) => [f, "Early", "December 2026", "5 October 2026"],
+  assignment_graded: () => ["Variance analysis report", "23 of 30, feedback attached"],
+  study_nudge: (f) => [f, "4", "PM", "your December reattempt"],
 };
 
 const fillTemplate = (body: string, values: string[]) =>
@@ -106,7 +115,7 @@ function Bubble({ m }: { m: ChatMessage }) {
               <Sparkles className="size-3" /> Assistant
             </p>
           ) : m.from === "agent" ? (
-            <p className="mb-1 text-[11px] font-semibold text-brand">{m.author ?? "Learning team"}</p>
+            <p className="mb-1 text-[11px] font-semibold text-ink">{m.author ?? "Programme team"}</p>
           ) : null}
           <WaText text={m.text} />
           <p
@@ -125,16 +134,18 @@ function Bubble({ m }: { m: ChatMessage }) {
 }
 
 export function WhatsappInbox() {
-  const { user } = useRole();
+  const { persona: user } = useRole();
   // Needs-a-person first. Sorted once, so a thread you take over does not jump.
+  // Opens on the thread the assistant is still answering, so the inbox shows a
+  // conversation happening live.
   const [threads, setThreads] = useState<Conversation[]>(() =>
     conversations
       .filter((c) => c.channel === "whatsapp")
-      .map((c) => ({ ...c, unread: c.id === "cv-5" ? 0 : c.unread }))
+      .map((c) => ({ ...c, unread: c.id === LIVE_ID ? 0 : c.unread }))
       .sort((a, b) => stageOf(a).rank - stageOf(b).rank),
   );
   const [filter, setFilter] = useState("all");
-  const [activeId, setActiveId] = useState("cv-5");
+  const [activeId, setActiveId] = useState(LIVE_ID);
   const [draft, setDraft] = useState("");
   const [typing, setTyping] = useState(false);
   const [usedDraft, setUsedDraft] = useState<string[]>([]);
@@ -229,7 +240,7 @@ export function WhatsappInbox() {
     template.body,
     TEMPLATE_VALUES[template.name]?.(first) ?? [first],
   );
-  const sendTemplate = () =>
+  const sendTemplate = () => {
     update(activeId, (t) =>
       withMessage(t, {
         from: "agent",
@@ -238,6 +249,8 @@ export function WhatsappInbox() {
         text: templateBody,
       }),
     );
+    toast({ title: "Template sent", body: `${template.name} to ${person?.name ?? "the learner"}` });
+  };
 
   const count = (label: string) => threads.filter((t) => stageOf(t).label === label).length;
   const shown = threads.filter((t) => {
@@ -254,7 +267,7 @@ export function WhatsappInbox() {
     !draft &&
     !usedDraft.includes(active.id);
 
-  const dayLabel = active.lastAt.startsWith("2026-09-05")
+  const dayLabel = active.lastAt.startsWith("2026-09-14")
     ? "Today"
     : new Date(active.lastAt).toLocaleDateString("en-GB", { weekday: "long" });
 
@@ -291,7 +304,7 @@ export function WhatsappInbox() {
                     onClick={() => open(t.id)}
                     className={cn(
                       "flex w-full gap-3 p-3.5 text-left transition-colors",
-                      t.id === activeId ? "bg-brand-soft" : "hover:bg-surface-2",
+                      t.id === activeId ? "bg-cta-soft" : "hover:bg-surface-2",
                     )}
                   >
                     {p ? <Avatar name={p.name} size="md" /> : null}
@@ -301,7 +314,12 @@ export function WhatsappInbox() {
                           {p?.name}
                         </span>
                         <span className="shrink-0 text-[11px] text-ink-3">
-                          {t.windowOpen === false ? "Tue" : last.at}
+                          {t.windowOpen === false
+                            ? new Date(t.lastAt).toLocaleDateString("en-GB", {
+                                weekday: "short",
+                                timeZone: "Asia/Kolkata",
+                              })
+                            : last.at}
                         </span>
                       </p>
                       <p className="mt-0.5 truncate text-[12px] text-ink-3">
@@ -389,8 +407,8 @@ export function WhatsappInbox() {
                 <Clock className="mt-0.5 size-3.5 shrink-0 text-amber" />
                 <span>
                   <span className="font-medium text-ink">The 24-hour window has closed.</span>{" "}
-                  WhatsApp only allows an approved template until {first} replies. After that you
-                  can take over and chat freely.
+                  WhatsApp only allows an approved template until {first} replies. After that
+                  you can take over and reply freely.
                 </span>
               </p>
               <div className="flex flex-wrap items-center gap-2">
@@ -470,7 +488,7 @@ export function WhatsappInbox() {
                   e.preventDefault();
                   send();
                 }}
-                className="flex items-end gap-2 rounded-[var(--radius-lg)] border border-line bg-surface px-3 py-1.5 shadow-[var(--shadow-e1)] focus-within:border-brand"
+                className="flex items-end gap-2 rounded-[var(--radius-lg)] border border-line bg-surface px-3 py-1.5 focus-within:border-ink"
               >
                 <textarea
                   value={draft}
@@ -501,7 +519,7 @@ export function WhatsappInbox() {
                 </p>
                 <button
                   onClick={handBack}
-                  className="ml-auto inline-flex items-center gap-1.5 text-[12px] font-medium text-brand hover:underline"
+                  className="ml-auto inline-flex items-center gap-1.5 text-[12px] font-medium text-ink underline decoration-cta decoration-2 underline-offset-4"
                 >
                   <ArrowLeftRight className="size-3.5" /> Hand back to the assistant
                 </button>
