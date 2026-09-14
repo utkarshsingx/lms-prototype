@@ -7,6 +7,8 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { IconButton } from "./button";
 
+const scrim = "absolute inset-0 bg-[rgb(8_9_12/0.5)] backdrop-blur-[3px]";
+
 export function Modal({
   open,
   onClose,
@@ -48,9 +50,11 @@ export function Modal({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
             onClick={onClose}
-            className="absolute inset-0 bg-[rgb(12_12_14/0.42)] backdrop-blur-[3px]"
+            className={scrim}
           />
           <motion.div
+            role="dialog"
+            aria-modal="true"
             initial={{ opacity: 0, y: 14, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.99 }}
@@ -62,14 +66,20 @@ export function Modal({
           >
             <div className="flex items-start justify-between gap-4 border-b border-line px-6 pt-5 pb-4">
               <div className="min-w-0">
-                <h2 className="text-[16px] font-semibold tracking-[-0.015em] text-ink">
+                <h2 className="font-display text-[20px] leading-tight tracking-[var(--display-tracking)] text-ink">
                   {title}
                 </h2>
                 {sub ? (
                   <p className="mt-1 text-[13px] leading-snug text-ink-3">{sub}</p>
                 ) : null}
               </div>
-              <IconButton label="Close" size="sm" onClick={onClose}>
+              <IconButton
+                label="Close"
+                size="sm"
+                variant="outline"
+                onClick={onClose}
+                className="-mt-0.5 -mr-1.5"
+              >
                 <X className="size-4" />
               </IconButton>
             </div>
@@ -77,7 +87,7 @@ export function Modal({
               {children}
             </div>
             {footer ? (
-              <div className="flex items-center justify-end gap-2.5 border-t border-line bg-surface-2 px-6 py-3.5">
+              <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-line bg-surface-2 px-6 py-3.5">
                 {footer}
               </div>
             ) : null}
@@ -93,12 +103,18 @@ export function Drawer({
   open,
   onClose,
   title,
+  sub,
+  footer,
   children,
   width = "w-full max-w-md",
 }: {
   open: boolean;
   onClose: () => void;
   title: React.ReactNode;
+  /** One line under the title. */
+  sub?: React.ReactNode;
+  /** Pinned below the scrolling body: the drawer's actions. */
+  footer?: React.ReactNode;
   children: React.ReactNode;
   width?: string;
 }) {
@@ -121,29 +137,47 @@ export function Drawer({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
             onClick={onClose}
-            className="absolute inset-0 bg-[rgb(12_12_14/0.42)] backdrop-blur-[3px]"
+            className={scrim}
           />
           <motion.aside
+            role="dialog"
+            aria-modal="true"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className={cn(
-              "relative flex h-full flex-col border-l border-line bg-surface shadow-[var(--shadow-e4)]",
+              "relative flex h-full flex-col overflow-hidden border-l border-line bg-surface shadow-[var(--shadow-e4)] sm:rounded-l-[var(--radius-xl)]",
               width,
             )}
           >
-            <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-4">
-              <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-ink">
-                {title}
-              </h2>
-              <IconButton label="Close" size="sm" onClick={onClose}>
+            <div className="flex items-start justify-between gap-4 border-b border-line px-5 pt-4.5 pb-4">
+              <div className="min-w-0">
+                <h2 className="font-display text-[19px] leading-tight tracking-[var(--display-tracking)] text-ink">
+                  {title}
+                </h2>
+                {sub ? (
+                  <p className="mt-1 text-[13px] leading-snug text-ink-3">{sub}</p>
+                ) : null}
+              </div>
+              <IconButton
+                label="Close"
+                size="sm"
+                variant="outline"
+                onClick={onClose}
+                className="-mt-0.5"
+              >
                 <X className="size-4" />
               </IconButton>
             </div>
             <div className="scrollbar-slim min-h-0 flex-1 overflow-y-auto">
               {children}
             </div>
+            {footer ? (
+              <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-line bg-surface-2 px-5 py-3.5">
+                {footer}
+              </div>
+            ) : null}
           </motion.aside>
         </div>
       ) : null}

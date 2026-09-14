@@ -6,12 +6,16 @@ export function PageHeader({
   title,
   sub,
   actions,
+  badge,
   className,
 }: {
+  /** Nav section name, set as an uppercase label above the title. */
   eyebrow?: React.ReactNode;
   title: React.ReactNode;
   sub?: React.ReactNode;
   actions?: React.ReactNode;
+  /** Sits beside the title: a scope chip, "View-only access", a status. */
+  badge?: React.ReactNode;
   className?: string;
 }) {
   return (
@@ -21,17 +25,24 @@ export function PageHeader({
         className,
       )}
     >
-      <div className="min-w-0 max-w-2xl">
+      <div className="min-w-0 max-w-3xl">
         {eyebrow ? (
-          <p className="mb-2 text-[11px] font-semibold tracking-[0.13em] text-ink-3 uppercase">
+          <p className="mb-2 text-[11px] font-bold tracking-[0.12em] text-ink-3 uppercase">
             {eyebrow}
           </p>
         ) : null}
-        <h1 className="font-display text-[clamp(1.75rem,1.3rem+1.6vw,2.5rem)] leading-[1.08] tracking-[var(--display-tracking)] text-ink">
-          {title}
-        </h1>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <h1 className="min-w-0 font-display text-[clamp(1.75rem,1.35rem+1.5vw,2.375rem)] leading-[1.08] tracking-[var(--display-tracking)] text-ink">
+            {title}
+          </h1>
+          {badge ? (
+            <div className="flex flex-wrap items-center gap-2">{badge}</div>
+          ) : null}
+        </div>
         {sub ? (
-          <p className="mt-2.5 text-[14px] leading-relaxed text-ink-2">{sub}</p>
+          <p className="mt-2.5 max-w-2xl text-[14px] leading-relaxed text-ink-2">
+            {sub}
+          </p>
         ) : null}
       </div>
       {actions ? (
@@ -40,6 +51,19 @@ export function PageHeader({
     </header>
   );
 }
+
+type StatTone = "brand" | "jade" | "ember" | "violet" | "amber" | "rose";
+
+/* Literal class names so Tailwind can see them; `bg-${tone}-soft` would not
+   be generated. */
+const CHIP: Record<StatTone, string> = {
+  brand: "bg-brand-soft text-brand",
+  jade: "bg-jade-soft text-jade",
+  ember: "bg-ember-soft text-ember",
+  violet: "bg-violet-soft text-violet",
+  amber: "bg-amber-soft text-amber",
+  rose: "bg-rose-soft text-rose",
+};
 
 export function StatTile({
   label,
@@ -54,7 +78,7 @@ export function StatTile({
   value: React.ReactNode;
   delta?: { value: string; up?: boolean };
   spark?: number[];
-  tone?: "brand" | "jade" | "ember" | "violet" | "amber" | "rose";
+  tone?: StatTone;
   icon?: React.ReactNode;
   className?: string;
 }) {
@@ -66,23 +90,33 @@ export function StatTile({
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <p className="text-[12px] font-medium tracking-[0.01em] text-ink-3">
+        <p className="min-w-0 pt-0.5 text-[11px] font-bold tracking-[0.1em] text-ink-3 uppercase">
           {label}
         </p>
         {icon ? (
-          <span className={cn("[&>svg]:size-4", `text-${tone}`)} style={{ color: `var(--${tone})` }}>
+          <span
+            className={cn(
+              "grid size-9 shrink-0 place-items-center rounded-[var(--radius-md)] [&>svg]:size-[18px]",
+              CHIP[tone],
+            )}
+          >
             {icon}
           </span>
         ) : null}
       </div>
-      <div className="mt-2.5 flex items-baseline gap-2">
-        <span className="text-[26px] leading-none font-semibold tracking-[-0.03em] text-ink tnum">
+      <div
+        className={cn(
+          "flex flex-wrap items-baseline gap-x-2 gap-y-1",
+          icon ? "mt-1.5" : "mt-3",
+        )}
+      >
+        <span className="font-display text-[30px] leading-none tracking-[var(--display-tracking)] text-ink tnum">
           {value}
         </span>
         {delta ? (
           <span
             className={cn(
-              "text-[12px] font-medium tnum",
+              "text-[12px] font-semibold tnum",
               delta.up === false ? "text-rose" : "text-jade",
             )}
           >
@@ -95,11 +129,7 @@ export function StatTile({
       </div>
       {spark ? (
         <div className="mt-3 -mb-1">
-          <Sparkline
-            data={spark}
-            tone={tone === "amber" || tone === "rose" ? "ember" : tone}
-            height={30}
-          />
+          <Sparkline data={spark} tone={tone} height={30} />
         </div>
       ) : null}
     </div>
@@ -122,16 +152,16 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "grid place-items-center rounded-[var(--radius-lg)] border border-dashed border-line-strong bg-surface-2/50 px-6 py-14 text-center",
+        "grid place-items-center rounded-[var(--radius-lg)] border border-dashed border-line-strong bg-surface px-6 py-14 text-center",
         className,
       )}
     >
       {icon ? (
-        <div className="mb-3.5 grid size-11 place-items-center rounded-full border border-line bg-surface text-ink-3 shadow-[var(--shadow-e1)] [&>svg]:size-5">
+        <div className="mb-3.5 grid size-12 place-items-center rounded-full bg-cta-soft text-ink [&>svg]:size-5">
           {icon}
         </div>
       ) : null}
-      <p className="text-[14.5px] font-semibold text-ink">{title}</p>
+      <p className="text-[15px] font-bold text-ink">{title}</p>
       {sub ? (
         <p className="mt-1.5 max-w-sm text-[13px] leading-relaxed text-ink-3">
           {sub}
@@ -144,7 +174,7 @@ export function EmptyState({
 
 export function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="inline-grid min-w-5 place-items-center rounded-[5px] border border-line bg-surface-2 px-1.5 py-0.5 font-sans text-[10.5px] font-medium text-ink-3 shadow-[0_1px_0_var(--line-strong)]">
+    <kbd className="inline-grid min-w-5 place-items-center rounded-[5px] border border-line bg-surface-2 px-1.5 py-0.5 font-sans text-[10.5px] font-semibold text-ink-3 shadow-[0_1px_0_var(--line-strong)]">
       {children}
     </kbd>
   );
@@ -155,7 +185,7 @@ export function Divider({ label }: { label?: string }) {
   return (
     <div className="flex items-center gap-3">
       <hr className="flex-1 border-line" />
-      <span className="text-[11px] font-medium tracking-[0.08em] text-ink-3 uppercase">
+      <span className="text-[11px] font-bold tracking-[0.12em] text-ink-3 uppercase">
         {label}
       </span>
       <hr className="flex-1 border-line" />
@@ -174,7 +204,9 @@ export function DataRow({
   return (
     <div className="flex items-baseline justify-between gap-4 border-b border-line py-2.5 last:border-0">
       <dt className="text-[12.5px] text-ink-3">{label}</dt>
-      <dd className="text-right text-[13px] font-medium text-ink">{children}</dd>
+      <dd className="min-w-0 text-right text-[13px] font-semibold text-ink">
+        {children}
+      </dd>
     </div>
   );
 }

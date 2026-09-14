@@ -1,36 +1,42 @@
 import Link from "next/link";
 import { cn } from "@/lib/cn";
 
-type Variant =
+export type ButtonVariant =
   | "primary"
   | "secondary"
   | "ghost"
   | "outline"
   | "danger"
   | "inverse";
-type Size = "xs" | "sm" | "md" | "lg";
+export type ButtonSize = "xs" | "sm" | "md" | "lg";
+
+type Variant = ButtonVariant;
+type Size = ButtonSize;
 
 const base =
-  "relative inline-flex items-center justify-center gap-2 font-medium whitespace-nowrap select-none " +
-  "transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-[var(--ease-out-quint)] " +
+  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap select-none " +
+  "transition-[background-color,border-color,color,box-shadow,transform,translate,opacity] duration-150 ease-[var(--ease-out-quint)] " +
   "active:translate-y-px disabled:pointer-events-none disabled:opacity-45";
 
 const variants: Record<Variant, string> = {
-  primary:
-    "bg-brand text-on-brand shadow-[var(--shadow-e2)] hover:bg-brand-hover hover:shadow-[var(--shadow-e3)]",
+  /* Yellow to gold with dark ink (theme brand gradient elsewhere). */
+  primary: "btn-cta font-bold",
+  /* The black identity button. In dark mode a faint inner edge keeps it from
+     dissolving into a dark card. */
   secondary:
-    "bg-surface text-ink border border-line shadow-[var(--shadow-e1)] hover:bg-surface-2 hover:border-line-strong",
+    "bg-surface-inv font-semibold text-ink-inv hover:bg-surface-inv/88 dark:ring-1 dark:ring-inset dark:ring-white/10",
   outline:
-    "border border-line-strong text-ink hover:bg-surface-2 hover:border-ink-3",
-  ghost: "text-ink-2 hover:bg-surface-2 hover:text-ink",
-  danger: "bg-rose text-on-accent shadow-[var(--shadow-e2)] hover:brightness-110",
-  inverse:
-    "bg-surface-inv text-ink-inv shadow-[var(--shadow-e2)] hover:opacity-90",
+    "border border-line-strong bg-surface font-semibold text-ink hover:border-ink-3 hover:bg-cta-soft",
+  ghost: "font-semibold text-ink-2 hover:bg-cta-soft hover:text-ink",
+  danger: "bg-rose font-semibold text-on-accent hover:bg-rose/90",
+  /* For use on an inverse surface (hero band, stage): the surface's own ink
+     as the fill, so it reads in both modes and every theme. */
+  inverse: "bg-ink-inv font-semibold text-surface-inv hover:bg-ink-inv/90",
 };
 
 const sizes: Record<Size, string> = {
-  xs: "h-7 rounded-[var(--radius-xs)] px-2.5 text-[12.5px]",
-  sm: "h-9 rounded-[var(--radius-sm)] px-3.5 text-[13.5px]",
+  xs: "h-7 rounded-[var(--radius-sm)] px-2.5 text-[12.5px]",
+  sm: "h-9 rounded-[var(--radius-md)] px-3.5 text-[13.5px]",
   md: "h-10.5 rounded-[var(--radius-md)] px-4.5 text-[14px]",
   lg: "h-12 rounded-[var(--radius-md)] px-6 text-[15px]",
 };
@@ -88,7 +94,10 @@ export function IconButton({
         base,
         variants[variant],
         box,
-        "rounded-[var(--radius-sm)] p-0",
+        size === "xs"
+          ? "rounded-[var(--radius-xs)]"
+          : "rounded-[var(--radius-md)]",
+        "p-0",
         className,
       )}
       {...props}

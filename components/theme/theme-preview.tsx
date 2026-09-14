@@ -1,4 +1,4 @@
-import type { Theme } from "@/lib/themes";
+import { ctaGradient, type Theme } from "@/lib/themes";
 
 /**
  * A miniature of the product rendered in one theme's own tokens.
@@ -18,6 +18,7 @@ export function ThemePreview({
 }) {
   const t = mode === "dark" ? theme.dark : theme.light;
   const r = theme.radius;
+  const grad = ctaGradient(theme, mode);
 
   return (
     <div
@@ -32,29 +33,40 @@ export function ThemePreview({
         overflow: "hidden",
       }}
     >
-      {/* chrome */}
+      {/* chrome: an active nav pill beside a quiet one */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
           gap: 5,
           padding: "7px 9px",
-          background: t["surface-2"],
+          background: t.surface,
           borderBottom: `1px solid ${t.line}`,
         }}
       >
         <span
           style={{
-            width: 12,
+            display: "grid",
+            placeItems: "center",
+            width: 22,
             height: 12,
             borderRadius: r.xs,
-            background: t["surface-inv"],
+            background: t["nav-active"],
           }}
-        />
+        >
+          <span
+            style={{
+              width: 4,
+              height: 4,
+              borderRadius: 99,
+              background: t["nav-active-icon"],
+            }}
+          />
+        </span>
         <span
           style={{
             height: 4,
-            width: 32,
+            width: 28,
             borderRadius: 99,
             background: t["line-strong"],
           }}
@@ -75,6 +87,7 @@ export function ThemePreview({
         <div
           style={{
             fontFamily: `var(${theme.fonts.display})`,
+            fontWeight: Number(theme.displayWeight ?? 400),
             color: t.ink,
             fontSize: 21,
             lineHeight: 1.05,
@@ -94,20 +107,21 @@ export function ThemePreview({
             letterSpacing: "0.01em",
           }}
         >
-          The quick brown fox
+          Financial Reporting · FR
         </div>
 
-        {/* a button and a progress rail */}
+        {/* the call to action and a progress rail */}
         <div
           style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 9 }}
         >
           <span
             style={{
               fontFamily: `var(${theme.fonts.sans})`,
-              background: t.brand,
-              color: t["on-brand"],
+              background: t.cta,
+              backgroundImage: grad.rest,
+              color: t["cta-ink"],
               fontSize: 7.5,
-              fontWeight: 600,
+              fontWeight: 700,
               padding: "3px 7px",
               borderRadius: r.sm,
               whiteSpace: "nowrap",
@@ -130,7 +144,7 @@ export function ThemePreview({
                 height: "100%",
                 width: "62%",
                 borderRadius: 99,
-                background: t.brand,
+                background: `linear-gradient(90deg,${t.cta},${t["cta-strong"]})`,
               }}
             />
           </span>
