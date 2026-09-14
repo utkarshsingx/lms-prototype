@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -30,22 +30,58 @@ import { Checkbox, Textarea } from "@/components/ui/field";
 import { Progress, Ring } from "@/components/ui/progress";
 import { DataRow } from "@/components/ui/misc";
 
-type Answers = Record<string, number | number[] | string>;
-type Answer = Answers[string];
+export type Answers = Record<string, number | number[] | string>;
+export type Answer = Answers[string];
 
 const isWritten = (q: Question) =>
   q.type === "short" || q.type === "code" || q.type === "essay";
 
+/* Digits with optional western (1,500,000) or Indian (15,00,000) grouping. An
+   ambiguous comma such as 1,5 is not read as a number at all. */
+const AMOUNT =
+  /^(\()?\s*([+-])?\s*[$£₹]?\s*((?:\d+|\d{1,3}(?:,\d{3})+|\d{1,2}(?:,\d{2})*,\d{3})(?:\.\d+)?|\.\d+)\s*(\))?$/;
+
+/** A typed figure as a number, or null when it is blank or not a number.
+ *  Accepts 1,500 · 1500 · -20 · 1,50,000 · (4,800) · $2.20; rejects 12a, 1..5. */
+export function parseAmount(raw: string): number | null {
+  const m = AMOUNT.exec(raw.trim().replace(/[\u2212\u2013]/g, "-"));
+  // Brackets mean negative, so they must pair and cannot carry a sign too.
+  if (!m || Boolean(m[1]) !== Boolean(m[4]) || (m[1] && m[2])) return null;
+  const n = Number(m[3].replace(/,/g, ""));
+  if (!Number.isFinite(n)) return null;
+  if (n === 0) return 0;
+  return m[1] || m[2] === "-" ? -n : n;
+}
+
+/** The learner's figure for a number question: typed text is parsed, and an
+ *  unparseable entry counts as unanswered. */
+export function numberAnswer(a: Answer | undefined): number | null {
+  if (typeof a === "number") return Number.isFinite(a) ? a : null;
+  return typeof a === "string" ? parseAmount(a) : null;
+}
+
+export function formatAmount(n: number) {
+  return n.toLocaleString("en-GB", { maximumFractionDigits: 4 });
+}
+
 function isAnswered(q: Question, a: Answer | undefined) {
   if (a == null) return false;
+  if (q.type === "number") return numberAnswer(a) !== null;
   if (q.type === "match") return Array.isArray(a) && a.some((v) => v >= 0);
   if (Array.isArray(a)) return a.length > 0;
   if (typeof a === "string") return a.trim().length > 0;
   return true;
 }
 
-function pointsFor(q: Question, a: Answer | undefined): number {
+export function pointsFor(q: Question, a: Answer | undefined): number {
   if (a == null) return 0;
+  if (q.type === "number") {
+    const got = numberAnswer(a);
+    if (got === null || q.value == null) return 0;
+    // Full marks within tolerance; the epsilon only absorbs float noise.
+    const slack = (q.tolerance ?? 0) + 1e-9 * Math.max(1, Math.abs(q.value));
+    return Math.abs(got - q.value) <= slack ? q.points : 0;
+  }
   if (q.type === "match") {
     // a[i] is the original index of the right item paired with left row i.
     const pairs = q.pairs ?? [];
@@ -189,6 +225,9 @@ export function AssessmentRunner({
     moduleTitles.length ||
     questions.reduce((n, x) => Math.max(n, (x.moduleIndex ?? -1) + 1), 0);
   const moduleTitle = (k: number) => moduleTitles[k] ?? `Module ${k + 1}`;
+  const back = /mock/i.test(assessment.title)
+    ? { href: "/mocks", label: "Mock exams" }
+    : { href: "/practice", label: "Practice" };
 
   useEffect(() => {
     if (phase !== "taking" || !assessment.minutes) return;
@@ -243,8 +282,8 @@ export function AssessmentRunner({
     return (
       <div className="mx-auto max-w-3xl space-y-6">
         <nav className="flex items-center gap-1.5 text-[12.5px] text-ink-3">
-          <Link href="/assessments" className="hover:text-ink">
-            Assessments
+          <Link href={back.href} className="hover:text-ink">
+            {back.label}
           </Link>
           <span>/</span>
           <Link href={`/courses/${courseSlug}`} className="hover:text-ink">
@@ -269,10 +308,10 @@ export function AssessmentRunner({
           </h1>
           <p className="mt-3 text-[15px] leading-relaxed text-ink-2">
             {diagnostic
-              ? `This is not graded. It only decides where you start in ${courseTitle}: modules you already know are marked as tested out, and the curriculum opens at the first one that is new to you.`
+              ? `This is not graded. It only decides where you start in ${courseTitle}: modules you already know are marked as tested out, and the paper opens at the first one that is new to you.`
               : assessment.autoGraded
-                ? "Graded the moment you submit. Every question shows you the reasoning afterwards, whether you got it right or not."
-                : "Marked by an instructor against the rubric below. You can read the full rubric before you start, which is the point of having one."}
+                ? "Marked the moment you submit. Every question shows you the reasoning afterwards, whether you got it right or not."
+                : "Marked by faculty against the rubric below. You can read the full rubric before you start, which is the point of having one."}
           </p>
         </header>
 
@@ -308,7 +347,10 @@ export function AssessmentRunner({
             {diagnostic ? null : (
               <>
                 <DataRow label="Pass mark">
-                  <span className="tnum">{assessment.passMark}%</span>
+                  <span className="tnum">
+                    {assessment.passMark}%
+                    {assessment.passMark === 50 ? " · the same as the ACCA exam" : ""}
+                  </span>
                 </DataRow>
                 <DataRow label="Due">
                   {new Date(assessment.dueAt).toLocaleString("en-GB", {
@@ -316,7 +358,9 @@ export function AssessmentRunner({
                     month: "long",
                     hour: "2-digit",
                     minute: "2-digit",
-                  })}
+                    timeZone: "Asia/Kolkata",
+                  })}{" "}
+                  IST
                 </DataRow>
               </>
             )}
@@ -331,9 +375,9 @@ export function AssessmentRunner({
                 This assessment is proctored
               </p>
               <p className="mt-1.5 text-[13px] leading-relaxed text-ink-2">
-                Leaving the tab is recorded and shown to your instructor with a
+                Leaving the tab is recorded and shown to faculty with a
                 timestamp. Nothing is captured from your camera or microphone,
-                and no automated decision is made from the record — a person
+                and no automated decision is made from the record: a person
                 reads it if it is ever raised.
               </p>
             </div>
@@ -396,9 +440,9 @@ export function AssessmentRunner({
               onChange={(e) => setAgreed(e.target.checked)}
               label={
                 <>
-                  I will complete this on my own. Using the assistant, another
-                  person or another tab for answers is a policy breach, and the
-                  platform records enough to make that checkable.
+                  I will complete this on my own. Using the AI tutor, another
+                  person or another tab for answers is a breach of the academic
+                  conduct policy, and the platform records enough to check.
                 </>
               }
             />
@@ -414,7 +458,7 @@ export function AssessmentRunner({
               <ArrowRight className="size-4" />
             </Button>
             <LinkButton
-              href={diagnostic ? `/courses/${courseSlug}` : "/assessments"}
+              href={diagnostic ? `/courses/${courseSlug}` : back.href}
               variant="ghost"
               size="lg"
             >
@@ -432,21 +476,21 @@ export function AssessmentRunner({
     return (
       <div className="mx-auto max-w-3xl space-y-6">
         <Card className="overflow-hidden">
-          <div className="bg-brand-soft p-6 sm:p-8">
-            <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.14em] text-brand uppercase">
-              <Compass className="size-3.5" /> Your placement
+          <div className="bg-surface-inv p-6 sm:p-8">
+            <p className="inline-flex items-center gap-1.5 text-[11px] font-bold tracking-[0.12em] text-ink-inv/70 uppercase">
+              <Compass className="size-3.5 text-cta" /> Your placement
             </p>
-            <h1 className="mt-2 font-display text-[2rem] leading-tight tracking-[var(--display-tracking)] text-ink tnum">
+            <h1 className="mt-2 font-display text-[2rem] leading-tight tracking-[var(--display-tracking)] text-ink-inv tnum">
               {place.testedOut
                 ? `You tested out of ${place.testedOut} of ${moduleCount} modules`
                 : "You will start from module 1"}
             </h1>
-            <p className="mt-1.5 max-w-xl text-[13.5px] leading-relaxed text-ink-2">
+            <p className="mt-1.5 max-w-xl text-[13.5px] leading-relaxed text-ink-inv/70">
               {place.start < 0
-                ? "Every module is marked as tested out. The whole course is open, and each module stays available if you want a refresher."
+                ? "Every module is marked as tested out. The whole paper is open, and each module stays available if you want a refresher."
                 : place.testedOut
                   ? "Modules you tested out of are marked complete and stay open for a refresher. The rest of the curriculum is unlocked from here."
-                  : "The curriculum is unlocked from module 1, which is where you will get the most out of it."}
+                  : "The paper is unlocked from module 1, which is where you will get the most out of it."}
             </p>
             <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3">
               <LinkButton
@@ -455,11 +499,11 @@ export function AssessmentRunner({
                 className="h-auto! min-h-12 py-3 whitespace-normal!"
               >
                 {place.start < 0
-                  ? "Open the course"
+                  ? "Open the paper"
                   : `Start at module ${place.start + 1}: ${moduleTitle(place.start)}`}
                 <ArrowRight className="size-4 shrink-0" />
               </LinkButton>
-              <span className="inline-flex items-center gap-1.5 text-[12.5px] text-ink-3">
+              <span className="inline-flex items-center gap-1.5 text-[12.5px] text-ink-inv/60">
                 <Lock className="size-3.5" /> One attempt · your placement is
                 saved
               </span>
@@ -525,7 +569,7 @@ export function AssessmentRunner({
 
         <div className="flex flex-wrap gap-3">
           <LinkButton href={`/courses/${courseSlug}`} variant="secondary">
-            Course overview
+            Paper overview
           </LinkButton>
         </div>
       </div>
@@ -542,7 +586,7 @@ export function AssessmentRunner({
           <div
             className={cn(
               "flex flex-wrap items-center gap-6 p-6 sm:p-8",
-              passed ? "bg-jade-soft" : "bg-ember-soft",
+              passed ? "bg-jade-soft" : "bg-rose-soft",
             )}
           >
             <Ring
@@ -555,7 +599,7 @@ export function AssessmentRunner({
               <p
                 className={cn(
                   "text-[11px] font-semibold tracking-[0.14em] uppercase",
-                  passed ? "text-jade" : "text-ember",
+                  passed ? "text-jade" : "text-rose",
                 )}
               >
                 {passed ? "Passed" : "Not passed"}
@@ -567,7 +611,7 @@ export function AssessmentRunner({
                 Pass mark {assessment.passMark}% · attempt 1 of{" "}
                 {assessment.attempts}
                 {needsReview
-                  ? " · written answers held for instructor review"
+                  ? " · written answers held for faculty marking"
                   : ""}
               </p>
             </div>
@@ -593,10 +637,10 @@ export function AssessmentRunner({
             <RotateCcw className="size-4" /> Retake
           </Button>
           <LinkButton href={`/learn/${courseSlug}`} variant="secondary">
-            Back to the course
+            Back to the paper
           </LinkButton>
-          <LinkButton href="/assessments" className="ml-auto">
-            All assessments
+          <LinkButton href={back.href} className="ml-auto">
+            {back.label}
           </LinkButton>
         </div>
       </div>
@@ -670,6 +714,11 @@ export function AssessmentRunner({
                   ) : null}
                   {q.type === "match" ? (
                     <Badge tone="brand">Match each pair</Badge>
+                  ) : null}
+                  {q.type === "number" ? (
+                    <Badge tone="brand">
+                      Enter a figure{q.unit ? ` in ${q.unit}` : ""}
+                    </Badge>
                   ) : null}
                   <button
                     onClick={() =>
@@ -881,6 +930,9 @@ function QuestionReview({
               {x.type === "match" ? (
                 <MatchReview q={x} value={answers[x.id]} got={got} />
               ) : null}
+              {x.type === "number" ? (
+                <NumberReview q={x} value={answers[x.id]} ok={ok} />
+              ) : null}
               {x.explanation ? (
                 <p className="mt-2.5 rounded-[var(--radius-sm)] border border-line bg-surface-2 px-3 py-2 text-[12.5px] leading-relaxed text-ink-2">
                   {x.explanation}
@@ -890,6 +942,112 @@ function QuestionReview({
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function NumberReview({
+  q,
+  value,
+  ok,
+}: {
+  q: Question;
+  value: Answer | undefined;
+  ok: boolean;
+}) {
+  const got = numberAnswer(value);
+  const typed = typeof value === "string" ? value.trim() : "";
+  const unit = q.unit ? (
+    <span className="ml-1.5 text-[12px] font-medium text-ink-3">{q.unit}</span>
+  ) : null;
+  return (
+    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+      <div
+        className={cn(
+          "rounded-[var(--radius-sm)] border px-3 py-2.5",
+          ok ? "border-transparent bg-jade-soft" : "border-transparent bg-rose-soft",
+        )}
+      >
+        <p className="text-[10.5px] font-bold tracking-[0.12em] text-ink-3 uppercase">
+          Your answer
+        </p>
+        <p className="mt-1 font-mono text-[15px] font-semibold text-ink tnum">
+          {got === null ? "Not answered" : formatAmount(got)}
+          {got === null ? null : unit}
+        </p>
+        {got === null && typed ? (
+          <p className="mt-0.5 text-[12px] text-ink-2 [overflow-wrap:anywhere]">
+            You typed “{typed}”, which is not a number.
+          </p>
+        ) : null}
+      </div>
+      <div className="rounded-[var(--radius-sm)] border border-line bg-surface-2 px-3 py-2.5">
+        <p className="text-[10.5px] font-bold tracking-[0.12em] text-ink-3 uppercase">
+          Correct answer
+        </p>
+        <p className="mt-1 font-mono text-[15px] font-semibold text-ink tnum">
+          {q.value == null ? "Not set" : formatAmount(q.value)}
+          {q.value == null ? null : unit}
+        </p>
+        {q.tolerance ? (
+          <p className="mt-0.5 text-[12px] text-ink-2 tnum">
+            Full marks within {formatAmount(q.tolerance)} either side
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function NumberInput({
+  q,
+  value,
+  onChange,
+}: {
+  q: Question;
+  value: Answer | undefined;
+  onChange: (v: Answer) => void;
+}) {
+  const id = useId();
+  const text = typeof value === "string" ? value : typeof value === "number" ? String(value) : "";
+  const parsed = parseAmount(text);
+  const blank = text.trim() === "";
+  return (
+    <div className="max-w-sm">
+      <label htmlFor={id} className="text-[12.5px] font-medium text-ink-2">
+        Your answer
+      </label>
+      <div className="mt-1.5 flex overflow-hidden rounded-[var(--radius-md)] border border-line bg-surface transition-[border-color,box-shadow] focus-within:border-brand focus-within:shadow-[0_0_0_3px_var(--ring)] hover:border-line-strong">
+        <input
+          id={id}
+          value={text}
+          onChange={(e) => onChange(e.target.value)}
+          autoComplete="off"
+          spellCheck={false}
+          placeholder="0"
+          aria-describedby={`${id}-read`}
+          className="h-12 min-w-0 flex-1 bg-transparent px-4 text-right font-mono text-[18px] font-semibold text-ink tnum placeholder:text-ink-3 focus:outline-none"
+        />
+        {q.unit ? (
+          <span className="grid shrink-0 place-items-center border-l border-line bg-surface-2 px-3.5 font-mono text-[13px] font-semibold text-ink-2">
+            {q.unit}
+          </span>
+        ) : null}
+      </div>
+      <p
+        id={`${id}-read`}
+        aria-live="polite"
+        className={cn(
+          "mt-2 text-[12px] leading-snug",
+          !blank && parsed === null ? "text-amber" : "text-ink-3",
+        )}
+      >
+        {blank
+          ? "Figures only. Commas and a minus sign are fine, for example 1,500 or -20."
+          : parsed === null
+            ? "This is not a number yet, so it counts as unanswered."
+            : `Reads as ${formatAmount(parsed)}${q.unit ? ` ${q.unit}` : ""}.`}
+      </p>
     </div>
   );
 }
@@ -1052,7 +1210,7 @@ function MatchInput({
     cn(
       "flex w-full items-start gap-3 rounded-[var(--radius-md)] border px-4 py-3 text-left transition-all",
       on
-        ? "border-brand bg-brand-soft shadow-[0_0_0_3px_var(--ring)]"
+        ? "border-brand bg-cta-soft shadow-[0_0_0_3px_var(--ring)]"
         : isPaired
           ? "border-line-strong bg-surface-2"
           : "border-line bg-surface hover:border-line-strong",
@@ -1160,6 +1318,10 @@ function QuestionInput({
     return <MatchInput q={q} value={value} onChange={onChange} />;
   }
 
+  if (q.type === "number") {
+    return <NumberInput q={q} value={value} onChange={onChange} />;
+  }
+
   if (q.type === "mcq" || q.type === "truefalse") {
     return (
       <div className="grid gap-2">
@@ -1172,7 +1334,7 @@ function QuestionInput({
               className={cn(
                 "flex items-start gap-3 rounded-[var(--radius-md)] border px-4 py-3 text-left transition-all",
                 on
-                  ? "border-brand bg-brand-soft shadow-[0_0_0_3px_var(--ring)]"
+                  ? "border-brand bg-cta-soft shadow-[0_0_0_3px_var(--ring)]"
                   : "border-line bg-surface hover:border-line-strong",
               )}
             >
@@ -1209,7 +1371,7 @@ function QuestionInput({
               className={cn(
                 "flex items-start gap-3 rounded-[var(--radius-md)] border px-4 py-3 text-left transition-all",
                 on
-                  ? "border-brand bg-brand-soft shadow-[0_0_0_3px_var(--ring)]"
+                  ? "border-brand bg-cta-soft shadow-[0_0_0_3px_var(--ring)]"
                   : "border-line bg-surface hover:border-line-strong",
               )}
             >
@@ -1234,10 +1396,10 @@ function QuestionInput({
   if (q.type === "code") {
     return (
       <div className="overflow-hidden rounded-[var(--radius-md)] border border-line">
-        <div className="flex items-center gap-2 border-b border-line bg-surface-2 px-3 py-2">
-          <span className="font-mono text-[12px] text-ink-3">raft.go</span>
-          <span className="ml-auto text-[11.5px] text-ink-3">
-            Go 1.23 · tests run on submit
+        <div className="flex items-center gap-2 border-b border-line bg-surface-inv px-3 py-2">
+          <span className="text-[12px] font-semibold text-ink-inv">Your answer</span>
+          <span className="ml-auto text-[11.5px] text-ink-inv/60">
+            Monospace editor · saved as you type
           </span>
         </div>
         <textarea
@@ -1259,13 +1421,13 @@ function QuestionInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={
           q.type === "essay"
-            ? "Write your response. Markdown is supported, and you can paste a link to a document instead."
+            ? "Write your answer. Set out workings and headings as you would in the exam."
             : "One or two sentences is enough."
         }
       />
       <p className="mt-2 text-[12px] text-ink-3 tnum">
         {((value as string) ?? "").trim().split(/\s+/).filter(Boolean).length}{" "}
-        words · reviewed by an instructor
+        words · marked by faculty
       </p>
     </div>
   );
