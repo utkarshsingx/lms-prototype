@@ -95,7 +95,7 @@ export type LearningPath = {
   title: string;
   purpose: string;
   audience: string;
-  kind: "Role" | "Skill" | "Onboarding" | "Compliance";
+  kind: "Qualification" | "Exam prep" | "Onboarding" | "Requirement";
   accent: string;
   owner: string;
   enrolled: number;
@@ -112,7 +112,8 @@ export type QuestionType =
   | "short"
   | "code"
   | "essay"
-  | "match";
+  | "match"
+  | "number";
 
 export type Question = {
   id: string;
@@ -122,6 +123,12 @@ export type Question = {
   options?: string[];
   /** Index (mcq/truefalse) or indices (multi). */
   answer?: number | number[];
+  /** Number questions only: the correct figure, in the stated unit. */
+  value?: number;
+  /** Number questions only: an answer within value ± tolerance is correct. */
+  tolerance?: number;
+  /** Number questions only: the unit the answer is entered in, e.g. "$000". */
+  unit?: string;
   /** Match questions only. Each left item's correct partner is the `right` on
    *  the same row; the runner shuffles the right-hand column for display. */
   pairs?: { left: string; right: string }[];

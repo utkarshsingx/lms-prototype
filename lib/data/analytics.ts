@@ -21,39 +21,44 @@ export const activityHeat = (() => {
 })();
 
 export const weeklyMinutes = [186, 240, 152, 305, 268, 341, 297, 412, 388, 356, 430, 470];
-export const weekLabels = ["W22", "W23", "W24", "W25", "W26", "W27", "W28", "W29", "W30", "W31", "W32", "W33"];
+export const weekLabels = ["W26", "W27", "W28", "W29", "W30", "W31", "W32", "W33", "W34", "W35", "W36", "W37"];
 
+/* Platform-wide learner figures. 610 learners are enrolled across the
+   graduate, fast track, strategic and university programmes. */
 export const orgStats = {
-  activeLearners: { value: 4218, delta: "12.4%", spark: [3410, 3520, 3488, 3690, 3742, 3880, 3960, 4102, 4218] },
+  activeLearners: { value: 548, delta: "6.4%", spark: [462, 474, 481, 497, 503, 512, 526, 539, 548] },
   hoursThisMonth: { value: 9840, delta: "8.1%", spark: [7100, 7460, 7320, 8010, 8290, 8640, 9010, 9410, 9840] },
   completionRate: { value: 73, delta: "3.2%", spark: [63, 64, 66, 65, 68, 70, 71, 72, 73] },
-  atRisk: { value: 186, delta: "9.0%", down: true, spark: [268, 254, 241, 236, 220, 214, 201, 194, 186] },
+  atRisk: { value: 71, delta: "9.0%", down: true, spark: [96, 92, 88, 86, 82, 79, 76, 78, 71] },
 };
 
+/** Syllabus completion by cohort. `headcount` is the cohort's headline size. */
 export const completionByDept = [
-  { label: "Engineering", value: 78, headcount: 1420 },
-  { label: "Data", value: 71, headcount: 310 },
-  { label: "Design", value: 84, headcount: 190 },
-  { label: "Product", value: 69, headcount: 240 },
-  { label: "Revenue", value: 58, headcount: 880 },
-  { label: "People", value: 92, headcount: 120 },
-  { label: "Legal", value: 88, headcount: 60 },
+  { label: "FR · Dec 2026 · Weekend", value: 78, headcount: 38 },
+  { label: "PM Revision and Reattempt · Dec 2026", value: 64, headcount: 22 },
+  { label: "AA · Dec 2026 · Weekday evening", value: 71, headcount: 31 },
+  { label: "FM Fast Track · Dec 2026", value: 69, headcount: 24 },
+  { label: "SBR · Mar 2027 · Weekend", value: 58, headcount: 18 },
+  { label: "Brightwater · 2025 intake · Semester 3", value: 84, headcount: 71 },
+  { label: "Brightwater · 2026 intake · Semester 1", value: 88, headcount: 71 },
+  { label: "Coastline · 2025 intake · Semester 3", value: 76, headcount: 48 },
 ];
 
 export const enrolmentMix = [
-  { label: "Self-enrolled", value: 2140, tone: "brand" },
-  { label: "Path-assigned", value: 3480, tone: "violet" },
-  { label: "Manager-assigned", value: 910, tone: "amber" },
-  { label: "Compliance auto", value: 6120, tone: "rose" },
+  { label: "Graduate Pathway", value: 214, tone: "brand" },
+  { label: "Fast Track", value: 58, tone: "violet" },
+  { label: "Strategic Professional", value: 36, tone: "amber" },
+  { label: "University-integrated", value: 302, tone: "rose" },
 ];
 
+/** December 2026 session readiness, from planned paper to ready to sit. */
 export const funnel = [
-  { label: "Assigned", value: 6120 },
-  { label: "Opened", value: 5488 },
-  { label: "Started", value: 4972 },
-  { label: "Halfway", value: 3910 },
-  { label: "Completed", value: 4470 },
-  { label: "Certified", value: 4110 },
+  { label: "Planned for Dec 2026", value: 412 },
+  { label: "Exam entered", value: 318 },
+  { label: "Revision started", value: 296 },
+  { label: "Mock attempted", value: 241 },
+  { label: "Mock passed", value: 176 },
+  { label: "Readiness 70+", value: 152 },
 ];
 
 export const channelStats = {
@@ -64,12 +69,12 @@ export const channelStats = {
     escalations: 41,
     csat: 4.6,
     topics: [
-      { label: "Deadlines and due dates", value: 318 },
+      { label: "Deadlines and exam entry", value: 318 },
       { label: "Where do I submit", value: 241 },
-      { label: "Course content questions", value: 205 },
-      { label: "Certificates", value: 168 },
-      { label: "Access and login", value: 142 },
-      { label: "Path and progression", value: 110 },
+      { label: "Paper content questions", value: 205 },
+      { label: "Exemptions and registration", value: 168 },
+      { label: "Access and sign-in", value: 142 },
+      { label: "Fees and payments", value: 110 },
       { label: "Other", value: 100 },
     ],
   },
@@ -92,10 +97,10 @@ export const channelStats = {
 };
 
 export const contentHealth = [
-  { course: "Data Privacy and GDPR", issue: "Drop-off spike at lesson 4", severity: "high", detail: "41% of learners abandon during 'Cross-border transfer'. Median dwell 38s — they are bouncing, not reading." },
-  { course: "Analytics Engineering With SQL", issue: "Assessment too easy", severity: "medium", detail: "Mean 94%, no question below 88% correct. The quiz is not discriminating." },
-  { course: "Cloud Cost Engineering", issue: "Stale content", severity: "medium", detail: "Last updated 18 April. Three linked pricing pages now 404." },
-  { course: "Kubernetes for Application Teams", issue: "Awaiting review 9 days", severity: "low", detail: "Submitted by Marcus Bell, no reviewer assigned." },
+  { course: "Performance Management (PM)", issue: "Drop-off spike at lesson 8", severity: "high", detail: "41% of learners stop during 'Limiting factors and linear programming'. Median time on the lesson is 38 seconds, so they are skipping it, not studying it." },
+  { course: "Business and Technology (BT)", issue: "Mock exam too easy", severity: "medium", detail: "Mean 94% on the BT on-demand practice, with no question below 88% correct. The mock is not separating ready learners from the rest." },
+  { course: "Taxation (TX-UK)", issue: "Rates and allowances out of date", severity: "medium", detail: "The reference lesson still shows Finance Act 2024 figures. December 2026 and March 2027 exams are based on the Finance Act 2025." },
+  { course: "Strategic Business Reporting (SBR)", issue: "Awaiting review 9 days", severity: "low", detail: "Submitted by Marcus Bell, no reviewer assigned." },
 ];
 
 export type UpcomingItem = {
@@ -111,23 +116,27 @@ export type UpcomingItem = {
   urgent?: boolean;
 };
 
+/* Anaya's next items, from Monday 14 September 2026 to the December session.
+   "Compliance" is used for ACCA deadlines, such as exam entry. */
 export const upcoming: UpcomingItem[] = [
-  { id: "up-1", title: "Incident walkthrough", kind: "Live session", course: "Distributed Systems in Practice", day: "12", month: "Sep", time: "Sat · 16:00 IST", href: "/learn/distributed-systems-in-practice", urgent: true },
-  { id: "up-2", title: "Consensus and replication", kind: "Graded exam", course: "Distributed Systems in Practice", day: "14", month: "Sep", time: "Due 23:59 IST", href: "/assessments/a-dist-consensus" },
-  { id: "up-3", title: "Design review with Marcus Bell", kind: "Mentor session", course: "Distributed Systems in Practice", day: "15", month: "Sep", time: "Tue · 17:30 IST" },
-  { id: "up-4", title: "Evaluation report", kind: "Assignment", course: "Building With Large Language Models", day: "19", month: "Sep", time: "Due 23:59 IST", href: "/assessments/a-llm-eval" },
-  { id: "up-5", title: "Privacy certification 2026", kind: "Compliance", course: "Data Privacy and GDPR", day: "31", month: "Oct", time: "Due 23:59 IST", href: "/assessments/a-privacy-final" },
+  { id: "up-1", title: "Mentor session with Aisha Khan · PM reattempt plan", kind: "Mentor session", course: "Performance Management (PM)", day: "16", month: "Sep", time: "Wed · 19:00 IST" },
+  { id: "up-2", title: "Live class: group accounts exam technique", kind: "Live session", course: "Financial Reporting (FR)", day: "19", month: "Sep", time: "Sat · 10:00 IST", href: "/learn/financial-reporting-fr", urgent: true },
+  { id: "up-3", title: "Group accounts test", kind: "Graded exam", course: "Financial Reporting (FR)", day: "20", month: "Sep", time: "Due 23:59 IST", href: "/assessments/a-fr-groups" },
+  { id: "up-4", title: "Written case: interpreting financial statements", kind: "Assignment", course: "Financial Reporting (FR)", day: "04", month: "Oct", time: "Due 23:59 IST", href: "/assessments/a-fr-case" },
+  { id: "up-5", title: "Early entry closes · December 2026 exams", kind: "Compliance", course: "PM reattempt not yet entered", day: "05", month: "Oct", time: "Enter on myACCA" },
+  { id: "up-6", title: "FR mock exam · Dec 2026", kind: "Graded exam", course: "Financial Reporting (FR)", day: "21", month: "Nov", time: "Sat · 10:00 IST", href: "/assessments/a-fr-mock" },
+  { id: "up-7", title: "December 2026 exam session", kind: "Compliance", course: "FR booked · PM reattempt", day: "07", month: "Dec", time: "7 to 10 Dec · results 25 Jan 2027" },
 ];
 
-/* The learner's own progress report (/progress). Weekly minutes cover the last
-   eight weeks, so the final four sum to the 30-day total shown beside them. */
+/* The learner's own progress report. Weekly minutes cover the last eight
+   weeks, so the final four sum to the 30-day total shown beside them. */
 export const learnerReport = {
-  minutes30d: 860,
-  minutesPrev30d: 680,
-  weeklyMinutes: [120, 165, 150, 175, 205, 230, 190, 235],
+  minutes30d: 2340,
+  minutesPrev30d: 1875,
+  weeklyMinutes: [420, 465, 510, 480, 540, 600, 570, 630],
   weekLabels: ["20 Jul", "27 Jul", "3 Aug", "10 Aug", "17 Aug", "24 Aug", "31 Aug", "7 Sep"],
-  sessions: { attended: 7, scheduled: 9, hours: 11 },
-  assessments: { passed: 7, taken: 8, averageScore: 88 },
+  sessions: { attended: 7, scheduled: 8, hours: 18 },
+  assessments: { passed: 7, taken: 8, averageScore: 68 },
 };
 
 export type CourseReport = {
@@ -136,56 +145,56 @@ export type CourseReport = {
   sessions: { attended: number; scheduled: number };
   /** Course completion at the end of each of the last eight weeks. */
   completionByWeek: number[];
-  /** Proficiency by skill, from quiz and lab results. Null until assessed. */
+  /** Proficiency by syllabus area, from quiz and workspace results. Null until assessed. */
   skills: { name: string; score: number | null }[];
 };
 
 export const courseReports: CourseReport[] = [
   {
-    courseId: "c-dist",
-    minutesSpent: 640,
-    sessions: { attended: 3, scheduled: 4 },
-    completionByWeek: [8, 15, 22, 30, 38, 47, 55, 62],
+    courseId: "c-fr",
+    minutesSpent: 1860,
+    sessions: { attended: 5, scheduled: 6 },
+    completionByWeek: [18, 24, 31, 38, 44, 50, 57, 62],
     skills: [
-      { name: "Failure models", score: 86 },
-      { name: "Clocks and ordering", score: 78 },
-      { name: "Consensus (Raft)", score: 64 },
-      { name: "Consistency models", score: null },
-      { name: "Operations", score: null },
+      { name: "A · Conceptual and regulatory framework", score: 78 },
+      { name: "B · Accounting for transactions", score: 66 },
+      { name: "D · Preparation of financial statements", score: 58 },
+      { name: "C · Analysing and interpreting", score: null },
     ],
   },
   {
-    courseId: "c-privacy",
-    minutesSpent: 85,
-    sessions: { attended: 0, scheduled: 0 },
-    completionByWeek: [0, 0, 0, 10, 18, 27, 36, 45],
-    skills: [
-      { name: "Lawful basis", score: 92 },
-      { name: "Data subject rights", score: 70 },
-      { name: "Breach response", score: null },
-    ],
-  },
-  {
-    courseId: "c-llm",
-    minutesSpent: 310,
-    sessions: { attended: 2, scheduled: 3 },
-    completionByWeek: [0, 4, 9, 14, 20, 24, 30, 34],
-    skills: [
-      { name: "Model behaviour", score: 81 },
-      { name: "Retrieval design", score: 94 },
-      { name: "Evaluation", score: 38 },
-      { name: "Agent safety", score: null },
-    ],
-  },
-  {
-    courseId: "c-design",
-    minutesSpent: 70,
+    courseId: "c-cbe",
+    minutesSpent: 260,
     sessions: { attended: 0, scheduled: 1 },
-    completionByWeek: [0, 0, 0, 0, 0, 4, 8, 12],
+    completionByWeek: [0, 0, 0, 12, 20, 28, 38, 45],
     skills: [
-      { name: "Diagnosing drift", score: 55 },
-      { name: "Token architecture", score: null },
-      { name: "Component APIs", score: null },
+      { name: "CBE mechanics", score: 90 },
+      { name: "Time allocation", score: 61 },
+      { name: "Answer planning", score: null },
+    ],
+  },
+  {
+    courseId: "c-pm",
+    minutesSpent: 940,
+    sessions: { attended: 2, scheduled: 2 },
+    completionByWeek: [0, 0, 4, 10, 16, 22, 28, 34],
+    skills: [
+      { name: "A · Specialist cost and management accounting techniques", score: 62 },
+      { name: "B · Decision-making techniques", score: 48 },
+      { name: "C · Budgeting and control", score: 55 },
+      { name: "D · Performance measurement and control", score: null },
+    ],
+  },
+  {
+    courseId: "c-tx",
+    minutesSpent: 2400,
+    sessions: { attended: 6, scheduled: 6 },
+    completionByWeek: [100, 100, 100, 100, 100, 100, 100, 100],
+    skills: [
+      { name: "B · Income tax and NIC liabilities", score: 64 },
+      { name: "C · Chargeable gains for individuals", score: 57 },
+      { name: "E · Corporation tax liabilities", score: 61 },
+      { name: "G · Value added tax", score: 52 },
     ],
   },
 ];
