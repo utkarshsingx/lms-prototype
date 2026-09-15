@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import {
   courseById,
-  currentUser,
+  courses,
   discussionThreads,
   enrolledCourses,
   hasAcceptedAnswer,
@@ -30,6 +30,8 @@ import {
   type DiscussionThread,
   type ThreadStatus,
 } from "@/lib/data";
+import { paperByCode, studentById } from "@/lib/data/acca";
+import { useRole } from "@/lib/role";
 import { cn } from "@/lib/cn";
 import { Card, SectionTitle } from "@/components/ui/card";
 import { Badge, type Tone } from "@/components/ui/badge";
@@ -104,7 +106,21 @@ function matchesSearch(t: DiscussionThread, terms: string[]) {
   return terms.every((w) => haystack.includes(w));
 }
 
-export function Forum() {
+/** Legacy people ids for the two demo learners, so posts and "My questions" follow the persona. */
+const VIEWER_PERSON: Record<string, string> = { "s-anaya": "u-anaya", "s-rohan": "u-rohan" };
+
+export function Forum({ switcher }: { switcher?: React.ReactNode } = {}) {
+  const { student, persona } = useRole();
+  const record = studentById(student?.id);
+  const viewer = { id: VIEWER_PERSON[record?.id ?? "s-anaya"] ?? "u-anaya", name: persona.name };
+  // Graduates keep their enrolled papers; undergraduates ask about the papers on their semester plan.
+  const myCourses = useMemo<Course[]>(() => {
+    if (!record || record.type === "graduate") return enrolledCourses;
+    return Object.values(record.papers)
+      .filter((p) => p.status === "current" || p.status === "in-progress" || p.status === "passed")
+      .map((p) => courses.find((c) => c.id === paperByCode(p.code)?.courseId))
+      .filter((c): c is Course => c !== undefined);
+  }, [record]);
   const [threads, setThreads] =
     useState<DiscussionThread[]>(discussionThreads);
   const [voted, setVoted] = useState<Record<string, boolean>>({});
@@ -124,10 +140,10 @@ export function Forum() {
   const counts = useMemo<Record<TabId, number>>(
     () => ({
       all: threads.length,
-      mine: threads.filter((t) => t.authorId === currentUser.id).length,
+      mine: threads.filter((t) => t.authorId === viewer.id).length,
       unanswered: threads.filter((t) => t.answers.length === 0).length,
     }),
-    [threads],
+    [threads, viewer.id],
   );
 
   const threadCourses = useMemo(
@@ -143,13 +159,13 @@ export function Forum() {
     const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
     return threads
       .filter((t) => {
-        if (tab === "mine" && t.authorId !== currentUser.id) return false;
+        if (tab === "mine" && t.authorId !== viewer.id) return false;
         if (tab === "unanswered" && t.answers.length > 0) return false;
         if (courseFilter !== "all" && t.courseId !== courseFilter) return false;
         return matchesSearch(t, terms);
       })
       .sort(SORTERS[sort]);
-  }, [threads, tab, courseFilter, query, sort]);
+  }, [threads, tab, courseFilter, query, sort, viewer.id]);
 
   const similar = useMemo(
     () => similarThreads(draft.title, threads),
@@ -187,7 +203,7 @@ export function Forum() {
       title: d.title || seedTitle,
       courseId:
         d.courseId ||
-        (enrolledCourses.some((c) => c.id === courseFilter)
+        (myCourses.some((c) => c.id === courseFilter)
           ? courseFilter
           : ""),
     }));
@@ -199,7 +215,7 @@ export function Forum() {
     const thread: DiscussionThread = {
       id: `t-new-${threads.length + 1}`,
       courseId: draft.courseId,
-      authorId: currentUser.id,
+      authorId: viewer.id,
       title: draft.title.trim(),
       body: draft.body.trim(),
       tags: draftTags,
@@ -234,7 +250,7 @@ export function Forum() {
                 ...t.answers,
                 {
                   id: `${t.id}-a${t.answers.length + 1}`,
-                  authorId: currentUser.id,
+                  authorId: viewer.id,
                   body,
                   minutesAgo: 0,
                   upvotes: 0,
@@ -262,6 +278,8 @@ export function Forum() {
           </Button>
         }
       />
+
+      {switcher}
 
       <section className="space-y-4">
         <Tabs
@@ -414,6 +432,7 @@ export function Forum() {
           draft={draft}
           tags={draftTags}
           similar={similar}
+          courses={myCourses}
           onChange={(patch) => setDraft((d) => ({ ...d, ...patch }))}
           onSubmit={submitAsk}
           onViewSimilar={(id) => {
@@ -432,6 +451,7 @@ export function Forum() {
         {openThread ? (
           <ThreadDetail
             thread={openThread}
+            viewerName={viewer.name}
             voted={voted}
             onVote={toggleVote}
             reply={replies[openThread.id] ?? ""}
@@ -715,6 +735,7 @@ function InlineCode({ text }: { text: string }) {
 
 function ThreadDetail({
   thread,
+  viewerName,
   voted,
   onVote,
   reply,
@@ -722,6 +743,7 @@ function ThreadDetail({
   onPost,
 }: {
   thread: DiscussionThread;
+  viewerName: string;
   voted: Record<string, boolean>;
   onVote: (id: string) => void;
   reply: string;
@@ -852,8 +874,8 @@ function ThreadDetail({
         />
         <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2.5">
           <span className="inline-flex min-w-0 items-center gap-2 text-[12px] text-ink-3">
-            <Avatar name={currentUser.name} size="xs" />
-            <span className="truncate">Posting as {currentUser.name}</span>
+            <Avatar name={viewerName} size="xs" />
+            <span className="truncate">Posting as {viewerName}</span>
           </span>
           <Button type="submit" size="sm" disabled={!reply.trim()}>
             <Send className="size-3.5" /> Post
@@ -972,6 +994,7 @@ function AskForm({
   draft,
   tags,
   similar,
+  courses: paperCourses,
   onChange,
   onSubmit,
   onViewSimilar,
@@ -979,6 +1002,7 @@ function AskForm({
   draft: AskDraft;
   tags: string[];
   similar: DiscussionThread[];
+  courses: Course[];
   onChange: (patch: Partial<AskDraft>) => void;
   onSubmit: () => void;
   onViewSimilar: (id: string) => void;
@@ -1056,7 +1080,7 @@ function AskForm({
           <option value="" disabled>
             Choose one of your papers
           </option>
-          {enrolledCourses.map((c) => (
+          {paperCourses.map((c) => (
             <option key={c.id} value={c.id}>
               {c.title}
             </option>

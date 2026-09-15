@@ -5,6 +5,14 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowUp, Link2, Sparkles, Wrench } from "lucide-react";
 import type { ChatMessage } from "@/lib/data";
+import {
+  formatAccaDate,
+  paperByCode,
+  paperName,
+  studentById,
+  type PaperCode,
+  type Student,
+} from "@/lib/data/acca";
 import { useRole } from "@/lib/role";
 import { cn } from "@/lib/cn";
 import { RichText } from "./rich-text";
@@ -12,9 +20,11 @@ import { RichText } from "./rich-text";
 export type TutorStudentType = "graduate" | "undergraduate";
 export type TutorReply = Omit<ChatMessage, "id" | "at">;
 
+type TutorContext = { type: TutorStudentType; paper: PaperCode | null; student: Student | undefined };
+
 type Rule = {
   test: (q: string) => boolean;
-  reply: TutorReply | Record<TutorStudentType, TutorReply>;
+  reply: TutorReply | Record<TutorStudentType, TutorReply> | ((ctx: TutorContext) => TutorReply);
 };
 
 const re = (pattern: RegExp) => (q: string) => pattern.test(q);
@@ -36,6 +46,25 @@ const rules: Rule[] = [
         { label: "Raise a doubt", href: "/doubts" },
         { label: "Support tickets", href: "/support" },
       ],
+    },
+  },
+  {
+    test: re(/(exam format|format of|how long|duration|\bcbe\b|pass mark)/i),
+    reply: ({ paper }) => {
+      const p = paperByCode(paper ?? "FR")!;
+      const format =
+        p.examFormat === "on-demand"
+          ? "an **on-demand CBE**, so you can book any available date at a CBE centre"
+          : "a **session CBE**, sat in the March, June, September or December exam sessions";
+      return {
+        from: "bot",
+        action: `read the ${p.code} paper structure`,
+        text: `**${p.code} · ${p.name}** is ${format}. It lasts **${p.durationLabel}** and the pass mark is **50%**, as for every ACCA exam.\n\nSyllabus areas: ${p.syllabusAreas.map((a) => `${a.code} ${a.title}`).join(" · ")}.\n\nThe mock exams on this platform use the same timing and question formats, so the time pressure you feel in a mock is the real one.`,
+        citations: [
+          { label: "Mock exams", href: "/mocks" },
+          { label: `${p.code} paper`, href: `/courses/${p.courseSlug}` },
+        ],
+      };
     },
   },
   {
@@ -93,6 +122,18 @@ const rules: Rule[] = [
       citations: [
         { label: "Workspace: calculate goodwill on acquisition", href: "/learn/financial-reporting-fr" },
         { label: "Financial Reporting (FR)", href: "/courses/financial-reporting-fr" },
+      ],
+    },
+  },
+  {
+    test: re(/(mix and yield|\bmix\b|\byield\b)/i),
+    reply: {
+      from: "bot",
+      action: "answered from Performance Management (PM), syllabus area C",
+      text: "Mix and yield split a materials usage variance in two when ingredients can be substituted.\n\n**Mix variance**: take the actual total quantity used and restate it in the **standard mix**. Compare that with the actual mix, each ingredient at its standard price. It answers: did we use a more or less expensive blend than planned?\n\n**Yield variance**: compare the standard quantity for the actual output with the actual total quantity in standard mix, valued at the standard weighted average price. It answers: did the inputs produce as much output as they should?\n\nThat is the answer to your open doubt: the mix variance uses the **actual total quantity in standard mix**. In the written section, examiners give most marks for explaining why a cheaper mix can cause an adverse yield, not for the arithmetic.",
+      citations: [
+        { label: "Doubt resolution", href: "/doubts" },
+        { label: "PM mock exam · Dec 2026", href: "/assessments/a-pm-mock" },
       ],
     },
   },
@@ -159,6 +200,70 @@ const rules: Rule[] = [
     },
   },
   {
+    test: re(/(suspense|trial balance)/i),
+    reply: {
+      from: "bot",
+      action: "answered from Financial Accounting (FA), syllabus area E",
+      text: "A **suspense account** is opened when the trial balance does not balance, so the difference has somewhere to sit while you find the errors.\n\nOnly errors that break the double entry go through it: a one-sided entry, two debits, or a transposed figure on one side. Errors of omission, commission, principle or a complete reversal leave the trial balance balancing, so they are corrected with a normal journal and never touch suspense.\n\nA purchase invoice entered twice **in the payables ledger only** does not change suspense either: the ledger is a memorandum record, so you correct the ledger and the control account reconciliation.",
+      citations: [
+        { label: "Doubt resolution", href: "/doubts" },
+        { label: "FA mock exam", href: "/assessments/a-fa-mock" },
+      ],
+    },
+  },
+  {
+    test: re(/(consideration|contract law|offer and acceptance|\bcontract\b)/i),
+    reply: {
+      from: "bot",
+      action: "answered from Corporate and Business Law (LW), syllabus area B",
+      text: "**Consideration** is what each party gives in exchange for the other's promise. It must be sufficient but need not be adequate, and past consideration is not good consideration.\n\nPerforming an **existing contractual duty** owed to the same party is not usually good consideration (*Stilk v Myrick*). The exception is where the promisor gains a practical benefit and there is no duress (*Williams v Roffey*). Doing more than the existing duty, as in *Hartley v Ponsonby*, is good consideration.\n\nFor the exam, state the rule, name the case, then apply it to the facts in one or two sentences. Your faculty Vikram Joshi has this as an open doubt for the next class.",
+      citations: [
+        { label: "Doubt resolution", href: "/doubts" },
+        { label: "Corporate and Business Law (LW)", href: "/courses/corporate-and-business-law-lw" },
+      ],
+    },
+  },
+  {
+    test: re(/(\bmock\b)/i),
+    reply: {
+      graduate: {
+        from: "bot",
+        action: "checked your scheduled mock exams",
+        text: "You have two mocks scheduled:\n\n**FR mock exam · Dec 2026** on **Saturday 24 October**: proctored, 180 minutes, the same OT and constructed-response structure as the real exam. Complete the device check by 22 October.\n**PM mock exam · Dec 2026** on **Saturday 31 October**: 180 minutes, with a variance analysis question in Section C.\n\nBoth feed your readiness scores, and both are marked by faculty within a week so there is time to act on the feedback before the December session.",
+        citations: [
+          { label: "Mock exams", href: "/mocks" },
+          { label: "FR mock exam · Dec 2026", href: "/assessments/a-fr-mock" },
+        ],
+      },
+      undergraduate: {
+        from: "bot",
+        action: "checked your scheduled mock exams",
+        text: "Your **FA mock exam 2** for Brightwater and Coastline is on **Saturday 31 October**: an on-demand CBE format, 2 hours, 50% to pass. Your first FA mock scored 70%.\n\nIt sits well before your FA exam on 18 November and before the university examination blackout starts on 23 November, when no mocks are scheduled.",
+        citations: [
+          { label: "Mock exams", href: "/mocks" },
+          { label: "FA mock exam", href: "/assessments/a-fa-mock" },
+        ],
+      },
+    },
+  },
+  {
+    test: re(/(result|passed|scored)/i),
+    reply: {
+      graduate: {
+        from: "bot",
+        action: "read your attempt history and results",
+        text: "Your ACCA results so far:\n\n**BT, MA, FA, LW**: exempt, approved by ACCA in March 2025.\n**TX**: passed in March 2026 with **58%**.\n**PM**: 46% in June 2026, four marks short. The reattempt is planned for December 2026.\n\nYou did not sit in the September 2026 session. December results are released on **25 January 2027** and recorded here within 48 hours.",
+        citations: [{ label: "Exams & results", href: "/exams" }],
+      },
+      undergraduate: {
+        from: "bot",
+        action: "read your attempt history and results",
+        text: "Your ACCA results so far:\n\n**BT**: passed on 14 March 2026 with **71%**.\n**MA**: passed on 20 June 2026 with **64%**.\n\nBoth are on-demand CBEs, so the result is provisional on the day and confirmed by ACCA shortly after. **FA** is next, on 18 November 2026.",
+        citations: [{ label: "Exams & results", href: "/exams" }],
+      },
+    },
+  },
+  {
     test: re(/(class|recording|live|timetable|batch|cohort|attendance)/i),
     reply: {
       graduate: {
@@ -209,16 +314,21 @@ const rules: Rule[] = [
   },
 ];
 
-const fallback: TutorReply = {
-  from: "bot",
-  text: "I answer from your ACCA record (papers, exemptions, exam bookings, mock results and readiness scores) and from the study material, examiner reports and model answers for your papers. I can explain a topic, plan revision against your exam date, or raise a doubt with your faculty.\n\nI never change marks, grant attempts or enter exams. Those stay with the academic team and ACCA.",
-};
+function fallback({ paper }: TutorContext): TutorReply {
+  const scope = paper ? `**${paper} · ${paperName(paper)}**` : "your papers";
+  return {
+    from: "bot",
+    text: `I answer from your ACCA record (papers, exemptions, exam bookings, mock results and readiness scores) and from the study material, examiner reports and model answers for ${scope}. I can explain a topic, plan revision against your exam date, or raise a doubt with your faculty.\n\nI never change marks, grant attempts or enter exams. Those stay with the academic team and ACCA.`,
+    citations: [{ label: "Raise a doubt", href: "/doubts" }],
+  };
+}
 
 /** Answers a learner question the way the demo tutor would. */
-function tutorAnswer(question: string, type: TutorStudentType = "graduate"): TutorReply {
+function tutorAnswer(question: string, ctx: TutorContext): TutorReply {
   const hit = rules.find((r) => r.test(question));
-  if (!hit) return fallback;
-  return "from" in hit.reply ? hit.reply : hit.reply[type];
+  if (!hit) return fallback(ctx);
+  if (typeof hit.reply === "function") return hit.reply(ctx);
+  return "from" in hit.reply ? hit.reply : hit.reply[ctx.type];
 }
 
 const tutorSuggestions: Record<TutorStudentType, string[]> = {
@@ -245,26 +355,81 @@ const openers: Record<TutorStudentType, string> = {
     "I have your ACCA record in front of me: FA booked for 18 November, LW this semester, your readiness score and the Brightwater calendar. Ask me about any of it, or ask me to explain a topic from your papers.",
 };
 
-const clock = () =>
-  new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+/** One-paragraph grounding for a chosen paper, read from the learner's record. */
+export function paperContextLine(s: Student | undefined, code: PaperCode) {
+  const name = paperName(code);
+  if (!s) return `Focused on **${code} · ${name}**.`;
+  const p = s.papers[code];
+  const last = p.attempts[p.attempts.length - 1];
+  const readiness = s.readiness.byPaper[code];
+  const booking = s.examBookings.find((b) => b.paper === code && (b.status === "booked" || b.status === "planned"));
+  const status =
+    p.status === "current"
+      ? "It is your current paper"
+      : p.status === "failed" && last
+        ? `You scored ${last.score}% in ${last.label}, so this is a reattempt`
+        : p.status === "passed" && last
+          ? `You passed it in ${last.label} with ${last.score}%`
+          : p.status === "in-progress"
+            ? "It is in progress this semester"
+            : p.status === "exempt"
+              ? "You are exempt from it"
+              : "It is planned next on your journey";
+  const when = booking
+    ? booking.entryWindow === "on-demand"
+      ? `on ${formatAccaDate(booking.date)}`
+      : `for the ${booking.label} session`
+    : "";
+  const exam = booking ? (booking.status === "booked" ? ` The exam is booked ${when}.` : ` The exam is planned ${when}, not booked yet.`) : "";
+  return `Focused on **${code} · ${name}**. ${status}${readiness !== undefined ? `, with a readiness score of **${readiness}**` : ""}.${exam} Ask me about a topic from its syllabus, your readiness or the exam.`;
+}
 
 export function Chat({
   compact = false,
   className,
+  paper = null,
+  suggestions,
+  pinnedSuggestions = false,
 }: {
   compact?: boolean;
   className?: string;
+  /** Paper the learner chose as context; answers and the opener lean on it. */
+  paper?: PaperCode | null;
+  /** Replaces the default suggested prompts. */
+  suggestions?: string[];
+  /** Keep the suggestions row visible after the conversation starts. */
+  pinnedSuggestions?: boolean;
 }) {
-  const { studentType } = useRole();
+  const { studentType, student } = useRole();
   const type: TutorStudentType = studentType === "undergraduate" ? "undergraduate" : "graduate";
+  const record = studentById(student?.id);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [thinking, setThinking] = useState(false);
+  const [contextPaper, setContextPaper] = useState<PaperCode | null>(paper);
   const endRef = useRef<HTMLDivElement>(null);
+
+  // A new paper context mid-conversation is announced in the thread rather
+  // than wiping it, so the learner keeps what the tutor already said.
+  if (paper !== contextPaper) {
+    setContextPaper(paper);
+    if (messages.length > 0) {
+      setMessages((m) => [
+        ...m,
+        {
+          id: `ctx${m.length}`,
+          from: "bot",
+          at: "now",
+          action: paper ? `switched context to ${paper}` : "switched context to all papers",
+          text: paper ? paperContextLine(record, paper) : "Back to all of your papers. Ask about any of them.",
+        },
+      ]);
+    }
+  }
 
   // The opener is derived, not stored, so switching demo student re-grounds it.
   const thread: ChatMessage[] = [
-    { id: "seed", from: "bot", at: "now", text: openers[type] },
+    { id: "seed", from: "bot", at: "now", text: paper && messages.length === 0 ? paperContextLine(record, paper) : openers[type] },
     ...messages,
   ];
 
@@ -276,19 +441,22 @@ export function Chat({
     const q = text.trim();
     if (!q || thinking) return;
     setDraft("");
-    setMessages((m) => [...m, { id: `u${m.length}`, from: "learner", at: clock(), text: q }]);
+    setMessages((m) => [...m, { id: `u${m.length}`, from: "learner", at: "now", text: q }]);
     setThinking(true);
     // The delay is deliberate: an instant answer reads as canned, and the
     // "reading your record" beat is what the real product would be doing.
     window.setTimeout(
       () => {
-        const r = tutorAnswer(q, type);
+        const r = tutorAnswer(q, { type, paper, student: record });
         setThinking(false);
-        setMessages((m) => [...m, { ...r, id: `b${m.length}`, at: clock() }]);
+        setMessages((m) => [...m, { ...r, id: `b${m.length}`, at: "now" }]);
       },
       680 + ((q.length * 37) % 420),
     );
   }
+
+  const prompts = suggestions ?? tutorSuggestions[type];
+  const showPrompts = pinnedSuggestions || messages.length === 0;
 
   return (
     <div className={cn("flex min-h-0 flex-col", className)}>
@@ -318,12 +486,12 @@ export function Chat({
               </span>
               <div className="min-w-0 flex-1">
                 {m.action ? (
-                  <p className="mb-1.5 inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-2 py-0.5 text-[11px] text-ink-3">
-                    <Wrench className="size-3" />
-                    {m.action}
+                  <p className="mb-1.5 inline-flex max-w-full items-center gap-1.5 rounded-full border border-line bg-surface-2 px-2 py-0.5 text-[11px] text-ink-3">
+                    <Wrench className="size-3 shrink-0" />
+                    <span className="truncate">{m.action}</span>
                   </p>
                 ) : null}
-                <div className="text-[13.5px] leading-relaxed text-ink-2">
+                <div className="text-[13.5px] leading-relaxed text-ink-2 [overflow-wrap:anywhere]">
                   <RichText text={m.text} />
                 </div>
                 {m.citations?.length ? (
@@ -364,13 +532,26 @@ export function Chat({
         <div ref={endRef} />
       </div>
 
-      {messages.length === 0 ? (
-        <div className={cn("flex flex-wrap gap-1.5", compact ? "px-4 pb-3" : "px-1 pb-3")}>
-          {tutorSuggestions[type].slice(0, compact ? 3 : 5).map((s) => (
+      {showPrompts ? (
+        <div
+          className={cn(
+            "flex gap-1.5",
+            pinnedSuggestions ? "scrollbar-none overflow-x-auto border-t border-line px-4 pt-3 pb-1" : "flex-wrap",
+            !pinnedSuggestions && (compact ? "px-4 pb-3" : "px-1 pb-3"),
+          )}
+        >
+          {pinnedSuggestions ? (
+            <span className="shrink-0 self-center pr-1 text-[10.5px] font-bold tracking-[0.12em] text-ink-3 uppercase">
+              Suggested
+            </span>
+          ) : null}
+          {prompts.slice(0, compact && !pinnedSuggestions ? 3 : 5).map((s) => (
             <button
               key={s}
+              type="button"
               onClick={() => send(s)}
-              className="rounded-full border border-line bg-surface px-2.5 py-1.5 text-[12px] text-ink-2 transition-colors hover:border-cta hover:bg-cta-soft hover:text-ink"
+              disabled={thinking}
+              className="shrink-0 rounded-full border border-line bg-surface px-2.5 py-1.5 text-[12px] whitespace-nowrap text-ink-2 transition-colors hover:border-cta hover:bg-cta-soft hover:text-ink disabled:opacity-50"
             >
               {s}
             </button>
@@ -388,7 +569,7 @@ export function Chat({
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Ask about your papers, exams or a topic"
+          placeholder={paper ? `Ask about ${paper}, your exam or a topic` : "Ask about your papers, exams or a topic"}
           aria-label="Ask the AI tutor"
           className="h-11 w-full rounded-[var(--radius-md)] border border-line bg-surface pr-11 pl-3.5 text-[13.5px] text-ink placeholder:text-ink-3 focus:border-ink focus:shadow-[0_0_0_3px_var(--ring)] focus:outline-none"
         />

@@ -1,11 +1,8 @@
-import { Forum } from "@/components/discussions/forum";
+import type { Metadata } from "next";
+import { CommunityPage } from "@/components/discussions/community-page";
 
-export const metadata = { title: "Community" };
+export const metadata: Metadata = { title: "Community" };
 
-export default function DiscussionsPage() {
-  return (
-    <div className="mx-auto max-w-[86rem] space-y-7">
-      <Forum />
-    </div>
-  );
+export default function Page() {
+  return <CommunityPage />;
 }

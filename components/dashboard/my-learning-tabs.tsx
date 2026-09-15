@@ -2,73 +2,43 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, BookOpen, ClipboardCheck, Route } from "lucide-react";
-import {
-  assessments,
-  courseById,
-  enrolledCourses,
-  paths,
-  totalPoints,
-  type Assessment,
-} from "@/lib/data";
+import { ArrowRight, ClipboardCheck, Video } from "lucide-react";
+import { formatAccaDate, formatShortDate, staffName, type Student } from "@/lib/data/acca";
 import { Card } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
-import { Badge, type Tone } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { StatusPill } from "@/components/ui/status";
+import { LiveDot } from "@/components/ui/badge";
+import { PaperCodeChip } from "@/components/student/learn/bits";
+import {
+  MOCK_RUNNER,
+  batchName,
+  dayLabel,
+  joinState,
+  paperEntries,
+  upcomingClasses,
+} from "@/components/student/learn/derive";
 
-/* Anaya's standing on each open assessment. Mirrors the attempt history on
-   /mocks and /exams so the pages never disagree. */
-const MY_ATTEMPTS: Record<string, { used: number; label: string; tone: Tone; order: number }> = {
-  "a-fr-mock": { used: 0, label: "Scheduled · 24 Oct", tone: "amber", order: 0 },
-  "a-fr-groups": { used: 1, label: "Retake available", tone: "amber", order: 1 },
-  "a-pm-budgeting": { used: 1, label: "Completed · 94%", tone: "jade", order: 3 },
-  "a-epsm-final": { used: 1, label: "Completed · 93%", tone: "jade", order: 3 },
-};
-const NOT_STARTED = { used: 0, label: "Yet to start", tone: "neutral" as Tone, order: 2 };
-
-const myPathIds = ["p-dec-2026", "p-applied-skills"];
-/** Papers Anaya is exempt from count as done on a programme. */
-const EXEMPT = new Set(["c-bt", "c-ma", "c-fa", "c-lw"]);
-
-const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
-
-function Chip({ accent, children }: { accent: string; children: React.ReactNode }) {
-  return (
-    <span
-      className="grid size-10 shrink-0 place-items-center rounded-[var(--radius-md)] [&>svg]:size-4.5"
-      style={{ backgroundColor: `var(--${accent}-soft)`, color: `var(--${accent})` }}
-    >
-      {children}
-    </span>
-  );
-}
-
-/** Icon, then text and status side by side; the status drops under the text on phones. */
 function Row({
   href,
-  icon,
+  lead,
   title,
   meta,
   aside,
 }: {
   href: string;
-  icon: React.ReactNode;
+  lead: React.ReactNode;
   title: string;
   meta: string;
   aside: React.ReactNode;
 }) {
   return (
     <li>
-      <Link
-        href={href}
-        className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-surface-2"
-      >
-        {icon}
+      <Link href={href} className="group flex items-center gap-3.5 px-5 py-3.5 transition-colors hover:bg-cta-soft">
+        {lead}
         <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[14px] font-medium text-ink transition-colors group-hover:text-brand">
-              {title}
-            </p>
+            <p className="truncate text-[14px] font-semibold text-ink">{title}</p>
             <p className="mt-0.5 truncate text-[12px] text-ink-3 tnum">{meta}</p>
           </div>
           {aside}
@@ -78,56 +48,22 @@ function Row({
   );
 }
 
-function Meter({ value, label }: { value: number; label: string }) {
-  return (
-    <div className="flex items-center gap-3 sm:block sm:w-36 sm:shrink-0">
-      <p className="order-2 shrink-0 text-[12px] whitespace-nowrap text-ink-2 tnum sm:order-none sm:text-right">
-        {label}
-      </p>
-      <Progress
-        value={value}
-        height={4}
-        tone={value === 100 ? "jade" : "brand"}
-        className="order-1 flex-1 sm:order-none sm:mt-1.5"
-      />
-    </div>
-  );
-}
+/** Papers · Mocks · Live classes, for the signed-in student. */
+export function MyLearningTabs({ student: s }: { student: Student }) {
+  const [tab, setTab] = useState("papers");
 
-export function MyLearningTabs() {
-  const [tab, setTab] = useState("courses");
-
-  const inProgress = enrolledCourses
-    .filter((c) => (c.progress ?? 0) < 100)
-    .sort((a, b) => (b.progress ?? 0) - (a.progress ?? 0));
-
-  const programs = paths
-    .filter((p) => myPathIds.includes(p.id))
-    .map((p) => {
-      const required = p.steps.filter((s) => s.required);
-      const progress = required.map((s) =>
-        EXEMPT.has(s.courseId) ? 100 : (courseById(s.courseId)?.progress ?? 0),
-      );
-      return {
-        path: p,
-        required: required.length,
-        done: progress.filter((x) => x === 100).length,
-        value: Math.round(progress.reduce((n, x) => n + x, 0) / required.length),
-      };
-    });
-
-  const enrolledIds = new Set(enrolledCourses.map((c) => c.id));
-  const graded = assessments.filter((a) => a.kind !== "Diagnostic");
-  const mine = graded
-    .filter((a) => a.status === "open" && enrolledIds.has(a.courseId))
-    .map((a) => ({ a, me: MY_ATTEMPTS[a.id] ?? NOT_STARTED }))
-    .sort((x, y) => x.me.order - y.me.order);
-  const outstanding = mine.filter((m) => !m.me.label.startsWith("Completed")).length;
+  const papers = paperEntries(s).filter((p) => p.group === "now" || p.group === "next").slice(0, 5);
+  const scheduled = s.mocks.filter((m) => m.status === "scheduled");
+  const mocks = [
+    ...scheduled.sort((a, b) => a.date.localeCompare(b.date)),
+    ...s.mocks.filter((m) => m.status !== "scheduled").sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3),
+  ];
+  const classes = upcomingClasses(s).slice(0, 4);
 
   const footer = {
-    courses: { href: "/papers", label: `View all ${enrolledCourses.length} papers` },
-    programs: { href: "/journey", label: "Your ACCA journey" },
-    assessments: { href: "/mocks", label: "View mock exams" },
+    papers: { href: "/papers", label: "All papers and study material" },
+    mocks: { href: "/mocks", label: "Mock exams and results trend" },
+    classes: { href: "/classes", label: "Live classes and recordings" },
   }[tab]!;
 
   return (
@@ -137,90 +73,104 @@ export function MyLearningTabs() {
           value={tab}
           onChange={setTab}
           items={[
-            { id: "courses", label: "Papers", count: inProgress.length },
-            { id: "programs", label: "Programmes", count: programs.length },
-            { id: "assessments", label: "Tests and mocks", count: outstanding },
+            { id: "papers", label: "Papers", count: papers.length },
+            { id: "mocks", label: "Mocks", count: scheduled.length },
+            { id: "classes", label: "Live classes", count: classes.length },
           ]}
         />
       </div>
 
-      <ul className="divide-y divide-[var(--line)]">
-        {tab === "courses"
-          ? inProgress.map((c) => (
+      <ul className="divide-y divide-line">
+        {tab === "papers"
+          ? papers.map((p) => (
               <Row
-                key={c.id}
-                href={`/learn/${c.slug}`}
-                icon={
-                  <Chip accent={c.accent}>
-                    <BookOpen />
-                  </Chip>
-                }
-                title={c.title}
-                meta={`${c.category} · ${c.hours} study hrs · ${plural(
-                  graded.filter((a) => a.courseId === c.id).length,
-                  "assessment",
-                )}`}
-                aside={<Meter value={c.progress!} label={`${c.progress}% completed`} />}
-              />
-            ))
-          : null}
-
-        {tab === "programs"
-          ? programs.map(({ path, required, done, value }) => (
-              <Row
-                key={path.id}
-                href="/journey"
-                icon={
-                  <Chip accent={path.accent}>
-                    <Route />
-                  </Chip>
-                }
-                title={path.title}
-                meta={`${path.kind} · ${done} of ${required} required papers done · ${path.weeks} weeks`}
-                aside={<Meter value={value} label={`${value}% completed`} />}
-              />
-            ))
-          : null}
-
-        {tab === "assessments"
-          ? mine.map(({ a, me }) => (
-              <Row
-                key={a.id}
-                href={`/assessments/${a.id}`}
-                icon={
-                  <Chip accent={courseById(a.courseId)?.accent ?? "brand"}>
-                    <ClipboardCheck />
-                  </Chip>
-                }
-                title={a.title}
-                meta={assessmentMeta(a, me.used)}
+                key={p.code}
+                href={p.course ? (p.group === "now" ? `/learn/${p.course.slug}` : `/courses/${p.course.slug}`) : "/papers"}
+                lead={<PaperCodeChip code={p.code} />}
+                title={p.name}
+                meta={[p.statusLabel, p.semester ?? p.examLine].join(" · ")}
                 aside={
-                  <Badge tone={me.tone} className="w-fit shrink-0">
-                    {me.label}
-                  </Badge>
+                  <div className="flex items-center gap-3 sm:w-40 sm:shrink-0 sm:flex-col sm:items-stretch sm:gap-1.5">
+                    <Progress value={p.progress} height={5} tone={p.progress >= 100 ? "jade" : "cta"} className="flex-1" />
+                    <span className="shrink-0 text-[12px] text-ink-2 tnum sm:text-right">{p.progress}% studied</span>
+                  </div>
                 }
               />
             ))
+          : null}
+
+        {tab === "mocks"
+          ? mocks.map((m) => (
+              <Row
+                key={m.id}
+                href={m.status === "scheduled" && MOCK_RUNNER[m.paper] ? `/assessments/${m.assessmentId ?? MOCK_RUNNER[m.paper]}` : "/mocks"}
+                lead={
+                  <span className="grid size-10 shrink-0 place-items-center rounded-[12px] bg-surface-2 text-ink-2">
+                    <ClipboardCheck className="size-4.5" />
+                  </span>
+                }
+                title={m.title}
+                meta={`${m.paper} · ${formatAccaDate(m.date)}`}
+                aside={
+                  m.status === "scheduled" ? (
+                    <StatusPill status="Scheduled" className="w-fit shrink-0">
+                      Scheduled · {formatShortDate(m.date)}
+                    </StatusPill>
+                  ) : m.status === "missed" ? (
+                    <StatusPill status="Missed" className="w-fit shrink-0" />
+                  ) : (
+                    <StatusPill status={(m.score ?? 0) >= 50 ? "Passed" : "Failed"} className="w-fit shrink-0">
+                      Scored {m.score}%
+                    </StatusPill>
+                  )
+                }
+              />
+            ))
+          : null}
+
+        {tab === "classes"
+          ? classes.map((c) => {
+              const state = joinState(c);
+              return (
+                <Row
+                  key={c.id}
+                  href="/classes"
+                  lead={
+                    <span className="grid size-10 shrink-0 place-items-center rounded-[12px] bg-surface-2 text-ink-2">
+                      <Video className="size-4.5" />
+                    </span>
+                  }
+                  title={`${c.paper} · ${c.title}`}
+                  meta={`${dayLabel(c.start)}, ${c.start.slice(11, 16)} IST · ${staffName(c.facultyId)} · ${batchName(c)}`}
+                  aside={
+                    state === "live" ? (
+                      <span className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full bg-cta px-2.5 py-1 text-[12px] font-bold text-cta-ink">
+                        <LiveDot tone="jade" /> Join now
+                      </span>
+                    ) : state === "cancelled" ? (
+                      <StatusPill status="Cancelled" tone="neutral" className="w-fit shrink-0">
+                        Moved to recording
+                      </StatusPill>
+                    ) : (
+                      <StatusPill status="Scheduled" tone="info" className="w-fit shrink-0">
+                        {dayLabel(c.start)}
+                      </StatusPill>
+                    )
+                  }
+                />
+              );
+            })
           : null}
       </ul>
 
       <div className="border-t border-line px-5 py-3">
         <Link
           href={footer.href}
-          className="inline-flex items-center gap-1 text-[12.5px] font-medium text-brand hover:underline"
+          className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-ink underline decoration-cta decoration-2 underline-offset-4"
         >
           {footer.label} <ArrowRight className="size-3.5" />
         </Link>
       </div>
     </Card>
   );
-}
-
-function assessmentMeta(a: Assessment, used: number) {
-  return [
-    plural(a.questions.length, "question"),
-    `${totalPoints(a)} max marks`,
-    a.minutes ? `${a.minutes} mins` : "Untimed",
-    `${used}/${a.attempts} attempts`,
-  ].join(" · ");
 }

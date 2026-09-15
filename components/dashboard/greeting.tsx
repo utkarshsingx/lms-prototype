@@ -5,7 +5,7 @@ import { useSyncExternalStore } from "react";
 /* The demo world is fixed at Monday 14 September 2026, so the date line never
    moves. Only the part of the day follows the viewer's clock, read in the
    browser because the page is prerendered. */
-const DEMO_DATE = "Monday 14 September";
+export const DEMO_DATE = "Monday 14 September";
 
 const subscribe = () => () => {};
 
@@ -14,8 +14,13 @@ function readPartOfDay() {
   return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
 }
 
+/** "Good morning" in the browser, "Welcome back" on the server render. */
+export function usePartOfDay() {
+  return useSyncExternalStore(subscribe, readPartOfDay, () => "Welcome back");
+}
+
 export function Greeting({ firstName }: { firstName: string }) {
-  const part = useSyncExternalStore(subscribe, readPartOfDay, () => "Welcome back");
+  const part = usePartOfDay();
   return (
     <div>
       <p className="min-h-[1.2em] text-[12px] font-medium tracking-[0.02em] text-ink-3">
