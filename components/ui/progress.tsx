@@ -1,22 +1,41 @@
 import { cn } from "@/lib/cn";
 
+export type ProgressTone =
+  | "cta"
+  | "brand"
+  | "jade"
+  | "ember"
+  | "amber"
+  | "rose"
+  | "violet"
+  | "info"
+  | "ink";
+
+/* Literal class names so Tailwind generates them. */
+const FILL: Record<ProgressTone, string> = {
+  cta: "bg-[linear-gradient(90deg,var(--cta),var(--cta-strong))]",
+  brand: "bg-brand",
+  jade: "bg-jade",
+  ember: "bg-ember",
+  amber: "bg-amber",
+  rose: "bg-rose",
+  violet: "bg-violet",
+  info: "bg-info",
+  ink: "bg-ink",
+};
+
 export function Progress({
   value,
   className,
-  tone = "brand",
+  tone = "cta",
   height = 6,
 }: {
   value: number;
   className?: string;
-  tone?: "brand" | "jade" | "ember" | "ink";
+  /** Defaults to the yellow-to-gold CTA fill. */
+  tone?: ProgressTone;
   height?: number;
 }) {
-  const fill = {
-    brand: "bg-brand",
-    jade: "bg-jade",
-    ember: "bg-ember",
-    ink: "bg-ink",
-  }[tone];
   const pct = Math.max(0, Math.min(100, value));
   return (
     <div
@@ -32,7 +51,7 @@ export function Progress({
       <div
         className={cn(
           "h-full rounded-full transition-[width] duration-700 ease-[var(--ease-out-quint)]",
-          fill,
+          FILL[tone],
         )}
         style={{ width: `${pct}%` }}
       />
@@ -50,7 +69,7 @@ export function Ring({
   value: number;
   size?: number;
   stroke?: number;
-  tone?: "brand" | "jade" | "ember" | "violet";
+  tone?: ProgressTone;
   children?: React.ReactNode;
 }) {
   const r = (size - stroke) / 2;
@@ -84,7 +103,7 @@ export function Ring({
           className="transition-[stroke-dashoffset] duration-700 ease-[var(--ease-out-quint)]"
         />
       </svg>
-      <span className="absolute grid place-items-center text-[11px] font-semibold text-ink tnum">
+      <span className="absolute grid place-items-center text-[11px] font-bold text-ink tnum">
         {children ?? `${Math.round(pct)}%`}
       </span>
     </div>

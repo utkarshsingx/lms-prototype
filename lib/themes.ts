@@ -1,5 +1,5 @@
 /**
- * Theme registry — one source of truth for every palette in the product.
+ * Theme registry: one source of truth for every palette in the product.
  *
  * A theme changes the whole system: surfaces, ink, accents, type and radius, in
  * both light and dark. The CSS is generated from this file at build time by
@@ -9,6 +9,9 @@
  * Selector strategy: `html[data-theme="x"]` (specificity 0,1,1) outranks the
  * `:root` defaults in globals.css (0,1,0), and `html[data-theme="x"].dark`
  * (0,2,1) outranks the plain `.dark` block, so ordering never matters.
+ *
+ * The token values below are literals on purpose: scripts/check-themes.mjs
+ * evaluates this array directly and recomputes every contrast ratio from them.
  */
 
 export const TOKENS = [
@@ -39,6 +42,19 @@ export const TOKENS = [
   "violet",
   "violet-soft",
   "on-accent",
+  /* Informational blue. Themes whose brand is already blue reuse it. */
+  "info",
+  "info-soft",
+  /* Call to action: a fill (yellow in Prephasz), its gold end, a hover wash
+     and the ink that sits on the fill. Other themes derive these from brand. */
+  "cta",
+  "cta-strong",
+  "cta-soft",
+  "cta-ink",
+  /* The active sidebar pill, its label and its icon. */
+  "nav-active",
+  "nav-active-ink",
+  "nav-active-icon",
 ] as const;
 
 export type TokenName = (typeof TOKENS)[number];
@@ -52,6 +68,9 @@ export type RadiusScale = {
   xl: string;
   "2xl": string;
 };
+
+/** A CTA background at rest and on hover, as full CSS gradient values. */
+export type CtaGradient = { rest: string; hover: string };
 
 export type Theme = {
   id: string;
@@ -73,19 +92,39 @@ export type Theme = {
   pill?: string;
   /** Weight for display headings; variable faces can carry their own. */
   displayWeight?: string;
+  /** Generic family behind the display face while it loads. Serif by default. */
+  displayFallback?: "serif" | "sans";
   /**
    * OpenType features for the UI face. `cv11`/`ss01` are Inter-specific; a
    * different family may map ss01 to something else entirely, so each theme
    * opts in explicitly.
    */
   features?: string;
+  /**
+   * Cards and panels take their elevation from borders: the e1/e2 shadows are
+   * switched off. Overlays (e3/e4: modal, drawer, menu, toast) keep theirs.
+   */
+  flat?: boolean;
+  /** Exact CTA gradients per mode. Derived from cta and cta-strong if omitted. */
+  ctaGradient?: { light: CtaGradient; dark: CtaGradient };
   light: Tokens;
   dark: Tokens;
 };
 
+/** localStorage keys shared by the pre-paint script and the theme provider. */
+export const STORAGE_KEYS = { theme: "acca-theme", mode: "acca-mode" } as const;
+
 /* ---------------------------------------------------------------- radii */
 
 export const RADIUS: Record<string, RadiusScale> = {
+  prephasz: {
+    xs: "8px",
+    sm: "10px",
+    md: "12px",
+    lg: "20px",
+    xl: "24px",
+    "2xl": "28px",
+  },
   sharp: {
     xs: "0px",
     sm: "0px",
@@ -124,11 +163,119 @@ export const RADIUS: Record<string, RadiusScale> = {
 
 export const themes: Theme[] = [
   {
+    id: "prephasz",
+    name: "Prephasz",
+    tagline: "Black identity, yellow action",
+    blurb:
+      "High-contrast and flat: near-black identity, a yellow-to-gold call to action with dark ink, cards drawn with borders instead of shadows, set in Bricolage Grotesque over Plus Jakarta Sans.",
+    fonts: {
+      display: "--ff-bricolage",
+      sans: "--ff-jakarta",
+      mono: "--ff-jetbrains",
+    },
+    faces: {
+      display: "Bricolage Grotesque",
+      sans: "Plus Jakarta Sans",
+      mono: "JetBrains Mono",
+    },
+    radius: RADIUS.prephasz,
+    displayTracking: "-0.03em",
+    displayWeight: "700",
+    displayFallback: "sans",
+    flat: true,
+    ctaGradient: {
+      light: {
+        rest: "linear-gradient(135deg,#ffd24d 0%,#ffc42d 48%,#f5b400 100%)",
+        hover: "linear-gradient(135deg,#ffc42d 0%,#f5b400 55%,#e6a600 100%)",
+      },
+      dark: {
+        rest: "linear-gradient(135deg,#ffd24d 0%,#ffc42d 48%,#f5b400 100%)",
+        hover: "linear-gradient(135deg,#ffc42d 0%,#f5b400 55%,#e6a600 100%)",
+      },
+    },
+    light: {
+      paper: "#f6f7fb",
+      surface: "#ffffff",
+      "surface-2": "#f1f4f9",
+      "surface-3": "#e5eaf2",
+      "surface-inv": "#16171d",
+      line: "#e3e8f1",
+      "line-strong": "#cbd3df",
+      ink: "#101322",
+      "ink-2": "#3d4757",
+      "ink-3": "#5a6477",
+      "ink-inv": "#ffffff",
+      brand: "#16171d",
+      "brand-hover": "#2c2e37",
+      "brand-soft": "#fff5ea",
+      "brand-line": "#f1d58e",
+      "on-brand": "#ffffff",
+      jade: "#0b7a55",
+      "jade-soft": "#e3f6ee",
+      ember: "#b8420b",
+      "ember-soft": "#ffedd5",
+      amber: "#8a5300",
+      "amber-soft": "#fdf1d6",
+      rose: "#b91c1c",
+      "rose-soft": "#fee2e2",
+      violet: "#6d3fd6",
+      "violet-soft": "#efe9fc",
+      "on-accent": "#ffffff",
+      info: "#1d4ed8",
+      "info-soft": "#e6eefe",
+      cta: "#ffc42d",
+      "cta-strong": "#f5b400",
+      "cta-soft": "#fff5ea",
+      "cta-ink": "#171717",
+      "nav-active": "#16171d",
+      "nav-active-ink": "#ffffff",
+      "nav-active-icon": "#ffc42d",
+    },
+    dark: {
+      paper: "#0b0c10",
+      surface: "#14161c",
+      "surface-2": "#1b1e26",
+      "surface-3": "#242833",
+      "surface-inv": "#22252f",
+      line: "#262a34",
+      "line-strong": "#3b404d",
+      ink: "#f3f4f7",
+      "ink-2": "#b9c0cc",
+      "ink-3": "#939bab",
+      "ink-inv": "#ffffff",
+      brand: "#ffc42d",
+      "brand-hover": "#ffd24d",
+      "brand-soft": "#2a2410",
+      "brand-line": "#5a4816",
+      "on-brand": "#171717",
+      jade: "#3ecf97",
+      "jade-soft": "#0f2a20",
+      ember: "#ff8a4c",
+      "ember-soft": "#2e1a0e",
+      amber: "#f2b84b",
+      "amber-soft": "#2b2008",
+      rose: "#ff6b7d",
+      "rose-soft": "#2f1318",
+      violet: "#b194ff",
+      "violet-soft": "#211a3a",
+      "on-accent": "#0b0c10",
+      info: "#7aa7ff",
+      "info-soft": "#121d36",
+      cta: "#ffc42d",
+      "cta-strong": "#f5b400",
+      "cta-soft": "#2a2410",
+      "cta-ink": "#171717",
+      "nav-active": "#ffc42d",
+      "nav-active-ink": "#171717",
+      "nav-active-icon": "#171717",
+    },
+  },
+  {
     id: "meridian",
-    name: "Meridian",
+    name: "Cobalt",
     tagline: "Warm paper, electric cobalt",
     blurb:
-      "The default. A warm off-white ground with near-black ink and one confident blue, set in a high-contrast serif over Inter.",
+      "A warm off-white ground with near-black ink and one confident cobalt blue, set in a high-contrast serif over Inter.",
     fonts: {
       display: "--ff-instrument-serif",
       sans: "--ff-inter",
@@ -169,6 +316,15 @@ export const themes: Theme[] = [
       violet: "#6a37cf",
       "violet-soft": "#efe9fc",
       "on-accent": "#ffffff",
+      info: "#2d5bff",
+      "info-soft": "#ecf0ff",
+      cta: "#2d5bff",
+      "cta-strong": "#1e42d0",
+      "cta-soft": "#ecf0ff",
+      "cta-ink": "#ffffff",
+      "nav-active": "#14161b",
+      "nav-active-ink": "#f7f6f3",
+      "nav-active-icon": "#7093ff",
     },
     dark: {
       paper: "#0a0b0e",
@@ -198,6 +354,15 @@ export const themes: Theme[] = [
       violet: "#a281f0",
       "violet-soft": "#1b1530",
       "on-accent": "#0b0d10",
+      info: "#7093ff",
+      "info-soft": "#161d33",
+      cta: "#7093ff",
+      "cta-strong": "#8aa6ff",
+      "cta-soft": "#161d33",
+      "cta-ink": "#0a0f22",
+      "nav-active": "#f3f2ef",
+      "nav-active-ink": "#14161b",
+      "nav-active-icon": "#2d5bff",
     },
   },
   {
@@ -205,7 +370,7 @@ export const themes: Theme[] = [
     name: "Broadsheet",
     tagline: "Toned paper, spot ink, square corners",
     blurb:
-      "The warmth lives in the neutrals, not in one decorative accent: the ground is toned book stock (#f6f1e6) and the ink is a warm blue-black (#1b1712), so every screen reads as a printed page before any colour arrives. The accents are retuned as printer's spot inks rather than screen colours — indigo, bottle green, sienna, ochre, claret, aubergine — which keeps colour working as punctuation on a dense table while preserving the fixed semantic roles; I widened ember and amber to 30 degrees apart in hue after measuring them at 20, because rust and ochre badges sit next to each other in a status row. Radius goes to zero because print has no rounded corners: hierarchy comes from hairline rules and generous measure, which is also what dense grids and long-form reading actually want.",
+      "Toned book stock and warm blue-black ink, accents retuned as printer's spot inks, and square corners, so dense tables read like a printed page.",
     fonts: {
       display: "--ff-newsreader",
       sans: "--ff-libre-franklin",
@@ -248,6 +413,15 @@ export const themes: Theme[] = [
       violet: "#6a3d8c",
       "violet-soft": "#efe6f2",
       "on-accent": "#fffdf8",
+      info: "#234b7d",
+      "info-soft": "#e4eaf2",
+      cta: "#234b7d",
+      "cta-strong": "#1a3a63",
+      "cta-soft": "#e4eaf2",
+      "cta-ink": "#fdfbf5",
+      "nav-active": "#1a1814",
+      "nav-active-ink": "#f7f3ea",
+      "nav-active-icon": "#7ea6d8",
     },
     dark: {
       paper: "#12100d",
@@ -277,6 +451,15 @@ export const themes: Theme[] = [
       violet: "#b48ad6",
       "violet-soft": "#1d1526",
       "on-accent": "#12100d",
+      info: "#7ea6d8",
+      "info-soft": "#16202c",
+      cta: "#7ea6d8",
+      "cta-strong": "#9bbde6",
+      "cta-soft": "#16202c",
+      "cta-ink": "#0d1620",
+      "nav-active": "#f4efe4",
+      "nav-active-ink": "#1b1712",
+      "nav-active-icon": "#234b7d",
     },
   },
   {
@@ -284,7 +467,7 @@ export const themes: Theme[] = [
     name: "Bindery",
     tagline: "Cream paper, pigment ink, soft corners",
     blurb:
-      "The warmth lives in the neutrals, not in one orange accent: every surface, hairline and ink token sits between hue 67 and 85 in OKLCH, so the ground reads as unbleached paper and the ink as a brown-black rather than a blue-black, in dark mode as much as light. Brand is ultramarine, the one cool pigment on the desk, which keeps buttons and links calm and separable from the warm status colours (burnt sienna, raw sienna, alizarin) that a learning platform fires constantly at the reader. Fraunces gives headings a hand-cut, letterpress warmth that Instrument Serif's high-contrast Didone cannot, Work Sans carries dense tables and hours of body copy without Inter's screen-cold neutrality, and IBM Plex Mono supplies drafting-table figures for code and tabular numerals.",
+      "Unbleached-paper neutrals with a brown-black ink and one calm ultramarine, set in Fraunces over Work Sans for long reading.",
     fonts: {
       display: "--ff-fraunces",
       sans: "--ff-work-sans",
@@ -326,6 +509,15 @@ export const themes: Theme[] = [
       violet: "#724598",
       "violet-soft": "#f2e5fa",
       "on-accent": "#fffcf6",
+      info: "#3f4fa3",
+      "info-soft": "#e6eafb",
+      cta: "#3f4fa3",
+      "cta-strong": "#2f3c8e",
+      "cta-soft": "#e6eafb",
+      "cta-ink": "#fffcf6",
+      "nav-active": "#221c15",
+      "nav-active-ink": "#f9f4ea",
+      "nav-active-icon": "#9da6eb",
     },
     dark: {
       paper: "#16120e",
@@ -355,6 +547,15 @@ export const themes: Theme[] = [
       violet: "#bf93e6",
       "violet-soft": "#22172a",
       "on-accent": "#16120e",
+      info: "#9da6eb",
+      "info-soft": "#181a2e",
+      cta: "#9da6eb",
+      "cta-strong": "#b4bcf8",
+      "cta-soft": "#181a2e",
+      "cta-ink": "#16120e",
+      "nav-active": "#f7f1e6",
+      "nav-active-ink": "#221c15",
+      "nav-active-icon": "#3f4fa3",
     },
   },
   {
@@ -362,7 +563,7 @@ export const themes: Theme[] = [
     name: "Norrland",
     tagline: "Cool northern light, almost no chrome",
     blurb:
-      "The neutrals do the work: every surface, hairline and ink level sits on one cool blue-grey axis (OKLCH hue 235), so the calm comes from the paper itself rather than from a single tinted accent — a warm palette with one cold button would read as a filter applied to a generic dashboard, not as a temperature. The accents are pulled to roughly half normal chroma and their soft tints are near-neutral whispers, which keeps a dense gradebook or compliance table quiet while a deep petrol blue still reads unambiguously as the one thing you can click, and the ink ramp stays heavy enough that metadata (the most-used token in this codebase, 328 uses) never drops to grey mush. Type is all-grotesque and institutional — Familjen Grotesk, a Swedish public-signage face, over Public Sans, the workhorse drawn for government service — because a clinical system earns authority from consistency and legibility at 13px, not from an editorial serif.",
+      "One cool blue-grey axis for every surface and hairline, half-chroma accents and a deep petrol blue, set in institutional grotesques.",
     fonts: {
       display: "--ff-familjen",
       sans: "--ff-public-sans",
@@ -404,6 +605,15 @@ export const themes: Theme[] = [
       violet: "#644a80",
       "violet-soft": "#f4eefc",
       "on-accent": "#ffffff",
+      info: "#2a5c7d",
+      "info-soft": "#e9f4fc",
+      cta: "#2a5c7d",
+      "cta-strong": "#164867",
+      "cta-soft": "#e9f4fc",
+      "cta-ink": "#ffffff",
+      "nav-active": "#192227",
+      "nav-active-ink": "#f3f6f8",
+      "nav-active-icon": "#8bb7d7",
     },
     dark: {
       paper: "#0c1114",
@@ -433,6 +643,15 @@ export const themes: Theme[] = [
       violet: "#c4a9e5",
       "violet-soft": "#32293d",
       "on-accent": "#0e1417",
+      info: "#8bb7d7",
+      "info-soft": "#1c2e3a",
+      cta: "#8bb7d7",
+      "cta-strong": "#a7cde9",
+      "cta-soft": "#1c2e3a",
+      "cta-ink": "#0e1519",
+      "nav-active": "#eff2f4",
+      "nav-active-ink": "#171f25",
+      "nav-active-icon": "#2a5c7d",
     },
   },
   {
@@ -440,7 +659,7 @@ export const themes: Theme[] = [
     name: "Flight Deck",
     tagline: "Anodized panel, cyan trace",
     blurb:
-      "The neutrals carry the direction rather than one loud accent: every grey is mixed at the brand's own cyan-blue hue, so the ground reads as anodized panel metal under fluorescent light instead of office white, and a dense grade table looks machined rather than decorated. Colour is spent only on state, with the six roles pushed to 37-72 degree spacing around the hue wheel so passed, live, gated, failed and AI never collide in a status column, and every tint held at one lightness so all chips carry identical weight. Space Grotesk is a proportional face drawn from a monospace, so headings inherit the squared discipline of the code and figures beneath them, while IBM Plex Sans keeps eight-hour reading comfortable and Plex Mono shares its skeleton, letting tabular numerals sit inside sans labels without a seam.",
+      "Anodized-panel neutrals mixed at the brand's cyan hue, colour spent only on state, set in Space Grotesk over Public Sans.",
     fonts: {
       display: "--ff-space-grotesk",
       sans: "--ff-public-sans",
@@ -483,6 +702,15 @@ export const themes: Theme[] = [
       violet: "#7a56c1",
       "violet-soft": "#f3f0ff",
       "on-accent": "#ffffff",
+      info: "#007594",
+      "info-soft": "#e2f7ff",
+      cta: "#007594",
+      "cta-strong": "#00576e",
+      "cta-soft": "#e2f7ff",
+      "cta-ink": "#ffffff",
+      "nav-active": "#11181d",
+      "nav-active-ink": "#f1f5f7",
+      "nav-active-icon": "#34c9f7",
     },
     dark: {
       paper: "#090e10",
@@ -512,6 +740,15 @@ export const themes: Theme[] = [
       violet: "#bba0ff",
       "violet-soft": "#262037",
       "on-accent": "#090f13",
+      info: "#34c9f7",
+      "info-soft": "#082934",
+      cta: "#34c9f7",
+      "cta-strong": "#84deff",
+      "cta-soft": "#082934",
+      "cta-ink": "#021218",
+      "nav-active": "#edf2f4",
+      "nav-active-ink": "#0d171c",
+      "nav-active-icon": "#007594",
     },
   },
   {
@@ -519,7 +756,7 @@ export const themes: Theme[] = [
     name: "Nitrate",
     tagline: "Warm stock, teal-black grade",
     blurb:
-      "A colour suite is a dark room with one pool of light, so the commitment is in the neutrals: every grey in this theme, in both modes, sits at OKLCH hue 214-235 with real chroma, giving the teal-shadow cast of a cinema grade rather than a neutral dashboard grey wearing a dark accent. The accents are the other half of that grade, warm luminous highlights (coral ember, gold amber, hot rose) against a cool cyan brand, so a status colour reads as light emitted from the panel instead of ink printed on it. Type is instrument chrome rather than editorial: Archivo is a wide technical gothic that holds tight-tracked hero numerals and all-caps eyebrows, IBM Plex Sans has the open apertures and flared stems that survive halation when light text blooms on a near-black ground where Inter's tighter apertures fill in, and Azeret Mono brings squared, unmistakable figures for code and tabular data.",
+      "Warm stock in light and a teal-black cinema grade in dark, with luminous warm accents against a cool cyan brand.",
     fonts: {
       display: "--ff-archivo",
       sans: "--ff-public-sans",
@@ -561,6 +798,15 @@ export const themes: Theme[] = [
       violet: "#653DD2",
       "violet-soft": "#ebe7fb",
       "on-accent": "#FFFFFF",
+      info: "#06718A",
+      "info-soft": "#dff1f6",
+      cta: "#06718A",
+      "cta-strong": "#04566B",
+      "cta-soft": "#dff1f6",
+      "cta-ink": "#FFFFFF",
+      "nav-active": "#14100c",
+      "nav-active-ink": "#f4f0ea",
+      "nav-active-icon": "#3FCFEA",
     },
     dark: {
       paper: "#05090C",
@@ -590,6 +836,15 @@ export const themes: Theme[] = [
       violet: "#A98BFF",
       "violet-soft": "#1C1638",
       "on-accent": "#05100E",
+      info: "#3FCFEA",
+      "info-soft": "#062631",
+      cta: "#3FCFEA",
+      "cta-strong": "#6FDDF1",
+      "cta-soft": "#062631",
+      "cta-ink": "#03181F",
+      "nav-active": "#EDF2F3",
+      "nav-active-ink": "#0A1013",
+      "nav-active-icon": "#06718A",
     },
   },
   {
@@ -597,7 +852,7 @@ export const themes: Theme[] = [
     name: "Signal",
     tagline: "Black rules, one violent ultramarine",
     blurb:
-      "Swiss signage builds structure from rules and flat planes, not from elevation, so this theme spends its whole colour budget on one violent ultramarine and keeps the neutrals resolutely achromatic — a concrete-grey ground, pure white card planes, and a hairline at 2.3:1 instead of the usual near-invisible 1.1:1, which turns dense tables and curriculum trees into a ruled grid rather than a field of floating cards. Every accent ink sits on one shared tonal weight (luminance ~0.095 in light), the way a spot-colour system prints, so success/live/caution/danger/AI differ by hue alone and never by shoutiness, leaving the ultramarine as the only thing on screen that raises its voice. Archivo Black gives poster-weight headings at the face's own default weight (this codebase never puts a weight utility on font-display, so headings can never be faux-bolded), Public Sans is a government-signage workhorse that holds up at the 11–13px where 300+ of this product's labels actually live, and IBM Plex Mono's engineered figures carry the 151 tabular-number sites.",
+      "Swiss signage: achromatic planes, ruled hairlines and one violent ultramarine, with poster-weight Archivo headings.",
     fonts: {
       display: "--ff-archivo",
       sans: "--ff-public-sans",
@@ -640,6 +895,15 @@ export const themes: Theme[] = [
       violet: "#8d12b7",
       "violet-soft": "#ead1f3",
       "on-accent": "#ffffff",
+      info: "#1f16e8",
+      "info-soft": "#c6c4f9",
+      cta: "#1f16e8",
+      "cta-strong": "#1610b4",
+      "cta-soft": "#c6c4f9",
+      "cta-ink": "#ffffff",
+      "nav-active": "#0a0a0a",
+      "nav-active-ink": "#ffffff",
+      "nav-active-icon": "#7b78ff",
     },
     dark: {
       paper: "#0a0a0a",
@@ -669,11 +933,20 @@ export const themes: Theme[] = [
       violet: "#b478ff",
       "violet-soft": "#1f1136",
       "on-accent": "#0a0a0a",
+      info: "#7b78ff",
+      "info-soft": "#14123f",
+      cta: "#7b78ff",
+      "cta-strong": "#9490ff",
+      "cta-soft": "#14123f",
+      "cta-ink": "#0a0a0a",
+      "nav-active": "#f2f2f2",
+      "nav-active-ink": "#0a0a0a",
+      "nav-active-icon": "#1f16e8",
     },
   },
 ];
 
-export const DEFAULT_THEME = "meridian";
+export const DEFAULT_THEME = "prephasz";
 
 export const themeById = (id: string) =>
   themes.find((t) => t.id === id) ?? themes[0];
@@ -688,9 +961,25 @@ function tokenDecls(tokens: Tokens) {
   return TOKENS.map((t) => `--${t}:${tokens[t]};`);
 }
 
+/** The CTA gradient for one mode: the theme's own, or derived from its tokens. */
+export function ctaGradient(theme: Theme, mode: "light" | "dark"): CtaGradient {
+  const own = theme.ctaGradient?.[mode];
+  if (own) return own;
+  const t = theme[mode];
+  return {
+    rest: `linear-gradient(135deg,${t.cta} 0%,${t.cta} 48%,${t["cta-strong"]} 100%)`,
+    hover: `linear-gradient(135deg,${t["cta-strong"]} 0%,${t["cta-strong"]} 100%)`,
+  };
+}
+
+function ctaDecls(theme: Theme, mode: "light" | "dark") {
+  const g = ctaGradient(theme, mode);
+  return [`--cta-grad:${g.rest};`, `--cta-grad-hover:${g.hover};`];
+}
+
 /**
- * Surfaces that are dark by nature — video chrome, code blocks, the marketing
- * showcase panels — must not flip to white in dark mode, but should still
+ * Surfaces that are dark by nature (video chrome, code blocks, the marketing
+ * showcase panels) must not flip to white in dark mode, but should still
  * change with the theme. They borrow the theme's own dark palette and stay
  * constant across modes.
  */
@@ -722,10 +1011,15 @@ function shadowTint(hex: string) {
   return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`;
 }
 
+const DISPLAY_FALLBACK = {
+  serif: "ui-serif,Georgia,serif",
+  sans: "ui-sans-serif,system-ui,sans-serif",
+};
+
 function shellDecls(theme: Theme) {
   const r = theme.radius;
-  return [
-    `--stack-display:var(${theme.fonts.display}),ui-serif,Georgia,serif;`,
+  const decls = [
+    `--stack-display:var(${theme.fonts.display}),${DISPLAY_FALLBACK[theme.displayFallback ?? "serif"]};`,
     `--stack-sans:var(${theme.fonts.sans}),ui-sans-serif,system-ui,sans-serif;`,
     `--stack-mono:var(${theme.fonts.mono}),ui-monospace,SFMono-Regular,monospace;`,
     `--display-tracking:${theme.displayTracking ?? "-0.02em"};`,
@@ -741,6 +1035,12 @@ function shellDecls(theme: Theme) {
     // A warm theme should cast a warm shadow, not a neutral grey one.
     `--shadow-color:${shadowTint(theme.light.ink)};`,
   ];
+  if (theme.flat) {
+    // A transparent shadow, not `none`: the utilities compose these into a
+    // comma list with ring shadows, where `none` would invalidate the lot.
+    decls.push("--shadow-e1:0 0 #0000;", "--shadow-e2:0 0 #0000;");
+  }
+  return decls;
 }
 
 /**
@@ -755,10 +1055,12 @@ export function themeCss() {
           ...shellDecls(t),
           ...stageDecls(t),
           ...tokenDecls(t.light),
+          ...ctaDecls(t, "light"),
           "color-scheme:light;",
         ]),
         block(`html[data-theme="${t.id}"].dark`, [
           ...tokenDecls(t.dark),
+          ...ctaDecls(t, "dark"),
           "--shadow-color:0 0 0;",
           "color-scheme:dark;",
         ]),
@@ -775,8 +1077,8 @@ export function themeColorMap() {
   );
 }
 
-/** Swatch shown on the picker chip: ground, ink, brand, and two accents. */
+/** Swatch shown on the picker chip: ground, ink, call to action, and two accents. */
 export function swatch(theme: Theme, mode: "light" | "dark" = "light") {
   const t = mode === "dark" ? theme.dark : theme.light;
-  return [t.paper, t.ink, t.brand, t.jade, t.ember];
+  return [t.paper, t.ink, t.cta, t.jade, t.ember];
 }

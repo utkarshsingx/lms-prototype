@@ -1,103 +1,144 @@
-import { Check, Sparkles } from "lucide-react";
+import { CalendarClock } from "lucide-react";
+import { Wordmark } from "@/components/shell/brand";
+import { cn } from "@/lib/cn";
 
-const track = [
-  { title: "Kubernetes for Application Teams", meta: "8h · complete", done: true },
-  { title: "Distributed Systems in Practice", meta: "18h · 62%", done: false, active: true },
-  { title: "Security Foundations", meta: "6h · required", done: false },
-  { title: "Writing for Engineers", meta: "5h · RFC reviewed", done: false },
+type PaperState = "exempt" | "passed" | "current" | "reattempt" | "planned";
+
+const GRADUATE: { code: string; state: PaperState; note?: string }[] = [
+  { code: "BT", state: "exempt" },
+  { code: "MA", state: "exempt" },
+  { code: "FA", state: "exempt" },
+  { code: "LW", state: "exempt" },
+  { code: "TX", state: "passed", note: "58%" },
+  { code: "PM", state: "reattempt", note: "Dec 26" },
+  { code: "FR", state: "current", note: "Dec 26" },
+  { code: "AA", state: "planned" },
+  { code: "FM", state: "planned" },
 ];
 
-/** The right half of the auth screens. It shows the product's actual idea —
- *  a sequenced path with gates — rather than a stock photograph of a laptop. */
+const UNDERGRAD: { code: string; state: PaperState; note?: string }[] = [
+  { code: "BT", state: "passed", note: "Sem 1" },
+  { code: "MA", state: "passed", note: "Sem 2" },
+  { code: "FA", state: "current", note: "18 Nov" },
+  { code: "LW", state: "current", note: "Sem 3" },
+  { code: "PM", state: "planned", note: "Sem 4" },
+  { code: "TX", state: "planned", note: "Sem 4" },
+  { code: "FR", state: "planned", note: "Sem 5" },
+];
+
+const chip: Record<PaperState, string> = {
+  exempt: "border border-dashed border-ink-inv/35 text-ink-inv/70",
+  passed: "bg-cta text-cta-ink",
+  current: "bg-ink-inv text-surface-inv ring-2 ring-cta ring-offset-2 ring-offset-surface-inv",
+  reattempt: "border border-ink-inv/40 text-ink-inv",
+  planned: "bg-ink-inv/8 text-ink-inv/45",
+};
+
+function Track({
+  title,
+  sub,
+  papers,
+}: {
+  title: string;
+  sub: string;
+  papers: { code: string; state: PaperState; note?: string }[];
+}) {
+  return (
+    <div className="rounded-[var(--radius-lg)] border border-ink-inv/12 bg-ink-inv/[0.04] p-4">
+      <p className="text-[13.5px] font-bold text-ink-inv">{title}</p>
+      <p className="mt-0.5 text-[12px] text-ink-inv/55">{sub}</p>
+      <ol className="mt-3.5 flex flex-wrap gap-x-1.5 gap-y-2.5">
+        {papers.map((p) => (
+          <li key={p.code} className="flex flex-col items-center gap-1">
+            <span
+              className={cn(
+                "grid h-7 min-w-9 place-items-center rounded-[var(--radius-sm)] px-1.5 font-mono text-[11.5px] font-bold",
+                chip[p.state],
+              )}
+            >
+              {p.code}
+            </span>
+            <span className="h-3 text-[9.5px] leading-none text-ink-inv/45 tnum">{p.note ?? ""}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+/** The black panel beside the sign-in screens: what ACCA LMS is, shown with the
+ *  two student journeys it runs side by side. */
 export function AuthAside() {
   return (
-    <aside className="relative hidden overflow-hidden border-l border-stage-line bg-stage lg:block">
-      <div className="grain absolute inset-0" />
+    <aside className="relative hidden bg-surface-inv text-ink-inv lg:block">
+      <div className="sticky top-0 flex h-dvh flex-col overflow-y-auto px-9 py-8 xl:px-11">
+        <Wordmark href="/" inverse />
 
-      {/* soft light source, top-right */}
-      <div
-        className="absolute -top-40 -right-32 size-[34rem] rounded-full opacity-[0.22] blur-3xl"
-        style={{
-          background:
-            "radial-gradient(circle, var(--stage-brand) 0%, color-mix(in oklab, var(--stage-brand) 20%, transparent) 45%, transparent 70%)",
-        }}
-      />
-      <div
-        className="absolute -bottom-48 -left-24 size-[30rem] rounded-full opacity-[0.14] blur-3xl"
-        style={{
-          background:
-            "radial-gradient(circle, var(--stage-ember) 0%, color-mix(in oklab, var(--stage-ember) 20%, transparent) 45%, transparent 70%)",
-        }}
-      />
-
-      <div className="relative flex h-full flex-col justify-between p-12 xl:p-16">
-        <div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-stage-ink/12 bg-stage-ink/[0.05] px-3 py-1 text-[11.5px] font-medium text-stage-ink/70">
-            <Sparkles className="size-3.5" />
-            Learning that knows where you are going
+        <div className="mt-10">
+          <span className="inline-flex items-center rounded-full bg-cta px-3 py-1 text-[11px] font-bold tracking-[0.06em] text-cta-ink uppercase">
+            ACCA programmes by ZSkillup
           </span>
-          <h2 className="mt-7 max-w-lg font-display text-[clamp(2rem,1.4rem+1.9vw,3.1rem)] leading-[1.06] tracking-[var(--display-tracking)] text-stage-ink">
-            A course catalogue is not a career. A path is.
+          <h2 className="mt-5 font-display text-[clamp(1.9rem,1.2rem+1.5vw,2.6rem)] leading-[1.06] font-extrabold tracking-[-0.03em]">
+            One platform for{" "}
+            <span className="underline decoration-cta decoration-[5px] underline-offset-[7px]">
+              every ACCA journey
+            </span>
           </h2>
-          <p className="mt-5 max-w-md text-[14.5px] leading-relaxed text-stage-ink/55">
-            Meridian sequences what someone needs for the role they are moving
-            into, gates it on evidence rather than attendance, and follows up
-            over chat, WhatsApp or a phone call when they stall.
+          <p className="mt-5 text-[14px] leading-relaxed text-ink-inv/65">
+            Graduate learners and university undergraduates study papers, sit mock
+            exams and track exemptions, exam entries and PER in one place. Staff run
+            programmes, teaching, mentoring and university coordination from their
+            own logins.
           </p>
         </div>
 
-        {/* The path, rendered honestly: gates, progress, order. */}
-        <div className="my-10 max-w-md">
-          <p className="mb-4 text-[10.5px] font-semibold tracking-[0.16em] text-stage-ink/40 uppercase">
-            Backend Engineer · L3 → L4
-          </p>
-          <ol className="relative space-y-3">
-            <span className="absolute top-2 bottom-2 left-[13px] w-px bg-stage-ink/12" />
-            {track.map((s) => (
-              <li key={s.title} className="relative flex items-start gap-4">
-                <span
-                  className={
-                    "relative z-10 mt-0.5 grid size-6.5 shrink-0 place-items-center rounded-full border text-[11px] font-semibold " +
-                    (s.done
-                      ? "border-transparent bg-stage-jade text-stage"
-                      : s.active
-                        ? "border-[#7093ff] bg-stage text-[#7093ff]"
-                        : "border-stage-ink/15 bg-stage text-stage-ink/35")
-                  }
-                >
-                  {s.done ? <Check className="size-3.5" strokeWidth={3} /> : null}
-                </span>
-                <span className="min-w-0 pt-0.5">
-                  <span
-                    className={
-                      "block text-[13.5px] font-medium " +
-                      (s.active ? "text-stage-ink" : s.done ? "text-stage-ink/70" : "text-stage-ink/50")
-                    }
-                  >
-                    {s.title}
-                  </span>
-                  <span className="mt-0.5 block text-[11.5px] text-stage-ink/35">
-                    {s.meta}
-                  </span>
-                </span>
+        <div className="mt-8 space-y-3">
+          <Track
+            title="Graduate ACCA learner"
+            sub="Four exemptions, then a paper at a time"
+            papers={GRADUATE}
+          />
+          <Track
+            title="University undergraduate"
+            sub="Brightwater University · Semester 3"
+            papers={UNDERGRAD}
+          />
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5 px-1 text-[11px] text-ink-inv/55">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-2.5 rounded-[3px] bg-cta" /> Passed
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-2.5 rounded-[3px] bg-ink-inv ring-2 ring-cta" /> Current
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-2.5 rounded-[3px] border border-dashed border-ink-inv/50" />{" "}
+              Exempt
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-auto pt-8">
+          <div className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-ink-inv/12 p-3.5">
+            <span className="grid size-9 shrink-0 place-items-center rounded-[var(--radius-sm)] bg-cta text-cta-ink">
+              <CalendarClock className="size-4.5" />
+            </span>
+            <span className="min-w-0 text-[12.5px] leading-snug">
+              <span className="block font-bold">December 2026 exam session</span>
+              <span className="block text-ink-inv/60">Early entry closes 5 Oct 2026</span>
+            </span>
+          </div>
+          <ul className="mt-5 grid grid-cols-3 gap-3 border-t border-ink-inv/12 pt-5">
+            {[
+              ["6", "logins"],
+              ["3", "partner universities"],
+              ["13", "ACCA exams tracked"],
+            ].map(([v, l]) => (
+              <li key={l}>
+                <p className="font-display text-[24px] leading-none font-extrabold tnum">{v}</p>
+                <p className="mt-1.5 text-[11px] leading-snug text-ink-inv/55">{l}</p>
               </li>
             ))}
-          </ol>
-        </div>
-
-        <div className="grid grid-cols-3 gap-6 border-t border-stage-ink/10 pt-7">
-          {[
-            ["4,218", "learners active this month"],
-            ["82%", "questions resolved without a human"],
-            ["21%", "completion lift from voice follow-up"],
-          ].map(([v, l]) => (
-            <div key={l}>
-              <p className="text-[22px] leading-none font-semibold tracking-[-0.03em] text-stage-ink tnum">
-                {v}
-              </p>
-              <p className="mt-2 text-[11.5px] leading-snug text-stage-ink/40">{l}</p>
-            </div>
-          ))}
+          </ul>
         </div>
       </div>
     </aside>

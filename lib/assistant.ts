@@ -4,40 +4,57 @@ export type Reply = Omit<ChatMessage, "id" | "at">;
 
 type Rule = { match: RegExp; reply: Reply };
 
-/* A scripted assistant. Every answer is grounded in the mock data elsewhere in
-   /lib/data, which is what makes the prototype feel like it knows the learner
-   rather than like a chat box glued onto a dashboard. */
+/* A scripted AI tutor. Every answer is grounded in the mock data elsewhere in
+   /lib/data (Anaya's papers, deadlines, readiness and the FR goodwill
+   workspace), which is what makes the prototype feel like it knows the learner
+   rather than like a chat box glued onto a dashboard. Rules are checked in
+   order, so the narrower ones come first. */
 const rules: Rule[] = [
   {
-    match: /(due|deadline|this week|overdue)/i,
+    match: /\b(entry|enter|entered|sitting|exam session|exam date)\b/i,
     reply: {
       from: "bot",
-      action: "checked your deadlines across 4 enrolments",
-      text: "Three things need you this week.\n\n**Tomorrow 16:00 IST** — Incident walkthrough, live, Distributed Systems.\n**In 9 days** — Consensus and replication, graded exam, 45 minutes, 2 attempts.\n**31 October** — Privacy certification, the last outstanding compliance item on your record.\n\nThe live session is the only one you cannot move. Want me to block 90 minutes for exam prep on Thursday?",
+      action: "checked the December 2026 exam calendar and your bookings",
+      text: "December 2026 exam entry: **early** entry closes 5 October, **standard** entry closes 2 November and **late** entry closes 16 November. Exams run 7 to 10 December, and results are released on 25 January 2027.\n\nYour FR exam is booked. Your PM reattempt is not entered yet, and entering by 5 October keeps you on the early entry fee. You enter on myACCA, not here: once you have, add the booking on Exams & results so your mentor and the programme team can see it.",
       citations: [
-        { label: "Assessments", href: "/assessments" },
-        { label: "Distributed Systems in Practice", href: "/learn/distributed-systems-in-practice" },
+        { label: "Exams & results", href: "/exams" },
+        { label: "ACCA journey", href: "/journey" },
       ],
     },
   },
   {
-    match: /(l4|promotion|on track|progress|career|path)/i,
+    match: /(due|deadline|this week|overdue)/i,
     reply: {
       from: "bot",
-      action: "compared your record against Backend Engineer, L3 → L4",
-      text: "You are 2 of 5 steps through the path and roughly on pace.\n\nDone: Kubernetes for Application Teams, Cloud Cost Engineering.\nIn flight: Distributed Systems in Practice at 62%, gated on the log-replication lab.\nNot started: Security Foundations (6h) and Writing for Engineers, which needs a staff-reviewed RFC.\n\nAt your recent pace of 2.4 hours a week that is about nine weeks. The cycle closes in eleven, so the margin is real but thin — the RFC review is the piece that usually slips.",
-      citations: [{ label: "Backend Engineer, L3 → L4", href: "/paths/backend-engineer-l3-to-l4" }],
+      action: "checked your deadlines across 2 papers in progress",
+      text: "Three things need you this week.\n\n**Today 19:30 IST**: mentor session with Aisha Khan on your PM reattempt plan.\n**Saturday 09:30 IST**: Live class: ratio analysis and interpretation, FR weekend batch.\n**Sunday 20 September**: Group accounts test, 45 minutes, 2 attempts, pass mark 50%.\n\nFurther out, early entry for the December exams closes on 5 October and your PM reattempt is not entered yet. The live class is the only one you cannot move. Want me to block 90 minutes on Friday evening to prepare for the test?",
+      citations: [
+        { label: "Group accounts test", href: "/assessments/a-fr-groups" },
+        { label: "Financial Reporting (FR)", href: "/learn/financial-reporting-fr" },
+      ],
     },
   },
   {
-    match: /(quorum|consensus|raft|partition|replica)/i,
+    match: /(on track|progress|readiness|\bready\b|december|chance)/i,
     reply: {
       from: "bot",
-      action: "answered from Distributed Systems in Practice, module 3",
-      text: "Quorum sizing is one inequality: any two quorums must overlap, so `R + W > N`.\n\nWith N=5, W=3 and R=3 every read set shares at least one node with the last write set, which is what gives you read-your-writes. Dropping to W=2 makes writes cheaper and quietly gives up that guarantee — the failure only shows up under a partition, which is why it survives code review.\n\nThe operational corollary: a 5-node cluster tolerates 2 failures, not 3. Sizing for \"three nines of nodes\" and then running with 2 healthy is how split-brain incidents start.",
+      action: "compared your readiness scores with the December 2026 session",
+      text: "You are on track for FR and at risk on PM.\n\n**FR · December 2026**: readiness 64, paper 62% complete, exam booked. The gap is group accounts, and your consolidation workings are the next step.\n**PM reattempt · December 2026**: readiness 58, paper 34% complete, not yet entered. You scored 46% in June, and your practice results point to decision-making techniques as the weakest area.\n\nLearners here usually sit their final mock with a readiness score of 70 or more. At your recent pace of about 10 hours a week, FR gets there by mid-November. PM needs roughly 3 more hours a week to do the same.",
       citations: [
-        { label: "Module 3 · Consensus you can implement", href: "/learn/distributed-systems-in-practice" },
-        { label: "Reference: quorum sizing cheat sheet", href: "/learn/distributed-systems-in-practice" },
+        { label: "Readiness", href: "/readiness" },
+        { label: "Performance Management (PM)", href: "/learn/performance-management-pm" },
+      ],
+    },
+  },
+  {
+    match: /(goodwill|\bnci\b|non-controlling|consolidat|group accounts|subsidiar)/i,
+    reply: {
+      from: "bot",
+      action: "answered from Financial Reporting (FR), module 3",
+      text: "Goodwill is what the parent paid for the subsidiary, plus the non-controlling interest, minus the fair value of the subsidiary's net assets at acquisition.\n\nIn the module 3 workspace, consideration is **$5,200k** (cash $3,000k plus 1,000k shares at $2.20), NCI at fair value is **$1,100k**, and net assets at acquisition are **$4,800k** (share capital $1,000k, retained earnings $3,300k and the $500k fair value uplift on land). Goodwill is 5,200 + 1,100 − 4,800 = **$1,500k**.\n\nThe common slip is leaving out the fair value uplift, which overstates goodwill by $500k. Measuring NCI at fair value also means a later goodwill impairment is shared with the NCI, 80:20.",
+      citations: [
+        { label: "Module 3 · Group accounts", href: "/learn/financial-reporting-fr" },
+        { label: "Workspace: calculate goodwill on acquisition", href: "/learn/financial-reporting-fr" },
       ],
     },
   },
@@ -45,26 +62,29 @@ const rules: Rule[] = [
     match: /(certificate|certification|certif)/i,
     reply: {
       from: "bot",
-      action: "checked certificate criteria on 3 completed courses",
-      text: "You hold 7 certificates. One is pending: **Analytics Engineering With SQL** has all lessons complete, but the certificate also requires a pass on *Submit a tested model*, which is still with an instructor.\n\nCertificates issue within an hour of the grade landing. I have flagged that submission as certificate-blocking so it moves to the front of the grading queue.",
-      citations: [{ label: "Profile and certificates", href: "/profile" }],
+      action: "checked certificate criteria on your 5 papers and courses",
+      text: "You hold 2 course certificates here: **Taxation (TX-UK)** and the **Ethics and Professional Skills Module (EPSM)**. One is in progress: **ACCA Exam Technique and CBE Practice** is 45% complete, and its certificate issues when you finish the lessons and pass the timed CBE mock.\n\nCertificates on this platform record your study with ZSkillup. Your ACCA exam passes and exemptions are recorded by ACCA on myACCA.",
+      citations: [{ label: "Certificates", href: "/certificates" }],
     },
   },
   {
-    match: /(submit|upload|hand in|assignment)/i,
+    match: /(submit|upload|hand in|assignment|workings)/i,
     reply: {
       from: "bot",
-      action: "looked up your enrolment state",
-      text: "The capstone upload in Distributed Systems unlocks once both module 3 labs are complete. Leader election is done; log replication is still in progress, which is why you cannot see the button.\n\nFinish that lab and **Assignment: submit your replicated store** appears in the same module. It is due 28 September and the median submission in your cohort lands four days early.",
-      citations: [{ label: "Capstone: replicated store design review", href: "/assessments/a-dist-capstone" }],
+      action: "looked up your progress in Financial Reporting (FR)",
+      text: "Both workspace lessons in FR module 3 are complete, so **Assignment: submit your consolidation workings** is open now. It is the lesson you are on.\n\nUpload your spreadsheet, or a PDF of your workings, from that lesson. Marcus Bell marks it within five working days, and the feedback feeds your FR readiness score before the Group accounts test on 20 September.",
+      citations: [
+        { label: "Financial Reporting (FR) · Module 3", href: "/learn/financial-reporting-fr" },
+      ],
     },
   },
   {
     match: /(book|schedule|calendar|remind)/i,
     reply: {
       from: "bot",
-      action: "created 2 calendar holds and 1 reminder",
-      text: "Booked. Thursday 09:30–11:00 and Friday 14:00–15:30 for exam prep, both in your working hours and clear of your existing meetings. I will send the exam link fifteen minutes before the first block.\n\nIf either slot moves, reply here and I will find the next free window rather than dropping the block.",
+      action: "booked 1 mock exam slot and 1 calendar hold",
+      text: "Booked. **FR mock exam · Dec 2026** on Saturday 24 October, 10:00 to 13:00 IST, timed and proctored like the real session CBE. I have also kept Friday evening before it free of study blocks.\n\nThat leaves six weeks to act on the result before exams start on 7 December. If the slot moves, reply here and I will find the next free window rather than dropping it.",
+      citations: [{ label: "FR mock exam · Dec 2026", href: "/assessments/a-fr-mock" }],
     },
   },
   {
@@ -72,33 +92,46 @@ const rules: Rule[] = [
     reply: {
       from: "bot",
       action: "checked your channel preferences",
-      text: "You are opted in on WhatsApp at +91 98••• ••432 and opted out of voice. On WhatsApp you currently get deadline reminders and grade notifications, and nothing else — no marketing templates.\n\nI can switch reminders to voice, or turn a channel off entirely. Voice calls only ever go out inside 09:00–18:00 in your own timezone, and the agent identifies itself as automated in its first sentence.",
-      citations: [{ label: "Channel settings", href: "/settings" }],
+      text: "You are opted in on WhatsApp at +91 98••• ••432 and opted out of voice. On WhatsApp you get live class reminders, mock exam reminders, exam entry deadlines and marks, and nothing else: no marketing templates.\n\nI can switch reminders to voice, or turn a channel off entirely. Voice calls only go out between 09:00 and 18:00 on weekdays, and the agent says it is automated in its first sentence.",
+      citations: [{ label: "Notifications", href: "/notifications" }],
     },
   },
   {
-    match: /(privacy|gdpr|compliance|security training)/i,
+    match: /(exemption|exempt|registration|registered|subscription|acca id|student id|\bper\b|epsm)/i,
     reply: {
       from: "bot",
-      action: "checked compliance record",
-      text: "One item outstanding: **Privacy certification 2026**, due 31 October, 25 minutes, three attempts, pass mark 80.\n\nSecurity Foundations is already certified — you scored 93 on 28 August and it is valid for twelve months. Your course progress on the privacy course sits at 45%, so the remaining reading is about 40 minutes before the exam itself.",
-      citations: [{ label: "Privacy certification 2026", href: "/assessments/a-privacy-final" }],
+      action: "checked your ACCA record",
+      text: "**Registered** with ACCA on 12 February 2025, ACCA ID 4382917. **Annual subscription** paid, next due 1 January 2027.\n\n**Exemptions**: BT, MA, FA and LW, estimated in January 2025 and confirmed by ACCA in March 2025, with exemption fees paid. **EPSM** is complete. **PER** stands at 14 of 36 months, with 3 of 9 performance objectives signed off.",
+      citations: [{ label: "ACCA journey", href: "/journey" }],
     },
   },
   {
-    match: /(eval|rag|retrieval|llm|prompt|model)/i,
+    match: /(variance|standard cost|budget|planning and operational)/i,
     reply: {
       from: "bot",
-      action: "answered from Building With Large Language Models, module 3",
-      text: "The rule from module 3 is that the eval suite comes before the feature, because a suite written afterwards encodes the behaviour you happen to have rather than the behaviour you want.\n\nThe practical minimum is a golden set of 50+ cases drawn from real traffic, at least one metric that maps to a user-visible failure, and a gate in CI that blocks merge. LLM-as-judge is fine for fluency and grounding, but measure the judge against human labels before trusting it — an unmeasured judge flatters the system that produced it.",
-      citations: [{ label: "Module 3 · Evaluation before features", href: "/learn/building-with-large-language-models" }],
+      action: "answered from Performance Management (PM), module 3",
+      text: "Split a variance before you judge anyone. Revise the standard to what it should have been, given conditions nobody controlled: the difference between the original and the revised standard is the **planning variance**, and it belongs to whoever set the budget. The difference between the revised standard and actual is the **operational variance**, the one a manager answers for.\n\nIn Section C, check that planning plus operational equals the total variance, then explain the links between variances. Cheaper material often shows up later as a poorer yield or an adverse labour efficiency variance.",
+      citations: [
+        { label: "Module 3 · Budgeting and control", href: "/learn/performance-management-pm" },
+      ],
+    },
+  },
+  {
+    match: /(npv|irr|wacc|cost of capital|cost of equity|capm|dividend growth)/i,
+    reply: {
+      from: "bot",
+      action: "answered from Financial Management (FM), module 3",
+      text: "FM gives you two routes to the cost of equity. The **dividend growth model** is Ke = D0(1 + g) / P0 + g, using the ex div share price. **CAPM** is Rf + β(Rm − Rf), where the bracket is the market risk premium, not the market return.\n\nFor the **WACC**, weight each source by market value, and use the after-tax cost of debt, because interest is tax deductible. Then use the WACC to discount a project only if the project does not change the company's business risk or gearing.",
+      citations: [
+        { label: "Module 3 · Business finance and cost of capital", href: "/learn/financial-management-fm" },
+      ],
     },
   },
 ];
 
 const fallback: Reply = {
   from: "bot",
-  text: "I can answer from your enrolments, deadlines, path progress and course content, and I can act on the platform — enrol you, book study time, or open a ticket.\n\nWhat I will not do is guess at grades or attempt limits. Those go to a human every time.",
+  text: "I can answer from your papers, deadlines, exam entries, readiness scores and study material, and I can act on the platform: book a mock exam, block study time, or raise a support ticket.\n\nWhat I will not do is guess at marks, attempt limits, exemptions or fees. Those go to a person every time.",
 };
 
 export function answer(question: string): Reply {

@@ -4,10 +4,15 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
-  useState,
+  useSyncExternalStore,
 } from "react";
-import { DEFAULT_THEME, themeById, themes, type Theme } from "@/lib/themes";
+import {
+  DEFAULT_THEME,
+  STORAGE_KEYS,
+  themeById,
+  themes,
+  type Theme,
+} from "@/lib/themes";
 
 type Mode = "light" | "dark";
 
@@ -33,34 +38,46 @@ const ThemeContext = createContext<Ctx>({
   themes,
 });
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setModeState] = useState<Mode>("light");
-  const [themeId, setThemeIdState] = useState<string>(DEFAULT_THEME);
+/* The <html> element is the source of truth: the bootstrap script in <head>
+   applies the stored theme and mode before paint, and every change is written
+   back to it. The provider only observes, so it and the DOM can never disagree
+   (and nothing is decided twice). */
+function subscribe(onChange: () => void) {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["class", "data-theme"],
+  });
+  return () => observer.disconnect();
+}
 
-  // The bootstrap script in <head> already applied both; read them back rather
-  // than re-deciding, so the provider and the DOM can never disagree.
-  useEffect(() => {
-    const el = document.documentElement;
-    setModeState(el.classList.contains("dark") ? "dark" : "light");
-    setThemeIdState(el.getAttribute("data-theme") ?? DEFAULT_THEME);
-  }, []);
+const readMode = (): Mode =>
+  document.documentElement.classList.contains("dark") ? "dark" : "light";
+const readThemeId = () =>
+  document.documentElement.getAttribute("data-theme") ?? DEFAULT_THEME;
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const mode = useSyncExternalStore<Mode>(subscribe, readMode, () => "light");
+  const themeId = useSyncExternalStore(
+    subscribe,
+    readThemeId,
+    () => DEFAULT_THEME,
+  );
 
   const setMode = useCallback((next: Mode) => {
-    setModeState(next);
     document.documentElement.classList.toggle("dark", next === "dark");
     try {
-      localStorage.setItem("meridian-mode", next);
+      localStorage.setItem(STORAGE_KEYS.mode, next);
     } catch {
-      /* private mode — the choice just does not persist */
+      /* private mode: the choice just does not persist */
     }
   }, []);
 
   const setThemeId = useCallback((id: string) => {
     const next = themeById(id).id;
-    setThemeIdState(next);
     document.documentElement.setAttribute("data-theme", next);
     try {
-      localStorage.setItem("meridian-theme", next);
+      localStorage.setItem(STORAGE_KEYS.theme, next);
     } catch {
       /* ignore */
     }

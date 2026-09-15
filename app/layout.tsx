@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import {
   Archivo,
   Azeret_Mono,
+  Bricolage_Grotesque,
   Familjen_Grotesk,
   Fraunces,
   Inter,
@@ -9,12 +10,19 @@ import {
   JetBrains_Mono,
   Libre_Franklin,
   Newsreader,
+  Plus_Jakarta_Sans,
   Public_Sans,
   Space_Grotesk,
   Work_Sans,
 } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
-import { DEFAULT_THEME, themeColorMap, themeCss } from "@/lib/themes";
+import {
+  DEFAULT_THEME,
+  STORAGE_KEYS,
+  themeById,
+  themeColorMap,
+  themeCss,
+} from "@/lib/themes";
 import "./globals.css";
 
 /* Every theme's faces are imported here, because next/font is a build-time
@@ -22,13 +30,38 @@ import "./globals.css";
    Each family exposes a namespaced --ff-* variable; a theme block re-points
    --stack-sans/display/mono at the ones it wants.
    `preload` defaults to TRUE and fetches the file on first paint whether or
-   not any text uses it, so only the default theme's three faces preload.
-   Everything else is fetched when a theme that uses it is actually selected. */
+   not any text uses it, so only the default theme's three faces (Prephasz:
+   Plus Jakarta Sans, Bricolage Grotesque, JetBrains Mono) preload. Everything
+   else is fetched when a theme that uses it is actually selected.
+   next/font is a build-time transform, so every option object here has to be a
+   literal: no spreads, no shared constants. */
+
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--ff-jakarta",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const bricolage = Bricolage_Grotesque({
+  variable: "--ff-bricolage",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const jetbrains = JetBrains_Mono({
+  variable: "--ff-jetbrains",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+/* The other themes' faces. All variable where the family allows, so each is
+   one file and roughly a kilobyte of @font-face CSS. */
 
 const inter = Inter({
   variable: "--ff-inter",
   subsets: ["latin"],
   display: "swap",
+  preload: false,
 });
 
 // Ships weight 400 only; request italic explicitly so <em> gets a real face
@@ -39,20 +72,8 @@ const instrumentSerif = Instrument_Serif({
   weight: "400",
   style: ["normal", "italic"],
   display: "swap",
+  preload: false,
 });
-
-const jetbrains = JetBrains_Mono({
-  variable: "--ff-jetbrains",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-/* The other themes' faces. All variable, so each is one file and roughly a
-   kilobyte of @font-face CSS, and none is fetched until a theme that uses it is
-   selected. Static families were deliberately avoided: they emit one @font-face
-   block per weight and cost several times as much.
-   next/font is a build-time transform, so every option object here has to be a
-   literal — no spreads, no shared constants. */
 
 const newsreader = Newsreader({
   variable: "--ff-newsreader",
@@ -118,9 +139,11 @@ const azeret = Azeret_Mono({
 });
 
 const fontVars = [
+  jakarta,
+  bricolage,
+  jetbrains,
   inter,
   instrumentSerif,
-  jetbrains,
   newsreader,
   libreFranklin,
   fraunces,
@@ -136,17 +159,22 @@ const fontVars = [
 
 export const metadata: Metadata = {
   title: {
-    default: "Meridian — the learning platform",
-    template: "%s · Meridian",
+    default: "ACCA LMS",
+    template: "%s · ACCA LMS",
   },
   description:
-    "Author courses, run assessments, sequence learning paths, and reach every learner over chat, WhatsApp and voice.",
+    "ZSkillup's ACCA learning platform: papers, live classes, mocks, exams and exemptions, university partnerships, mentoring and careers, in one workspace for every role.",
 };
+
+const defaultTheme = themeById(DEFAULT_THEME);
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fbfaf8" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0b0e" },
+    {
+      media: "(prefers-color-scheme: light)",
+      color: defaultTheme.light.paper,
+    },
+    { media: "(prefers-color-scheme: dark)", color: defaultTheme.dark.paper },
   ],
 };
 
@@ -155,18 +183,18 @@ export const viewport: Viewport = {
 const THEME_COLORS = JSON.stringify(themeColorMap());
 
 // Runs before paint so neither the palette nor the mode ever flashes wrong.
+// A first visit is always the default theme in light: the OS preference is
+// deliberately not consulted until the visitor picks a mode themselves.
 const bootstrap = `
 (function(){try{
   var e=document.documentElement;
-  var legacy=localStorage.getItem("meridian-theme");
-  if(legacy==="light"||legacy==="dark"){localStorage.setItem("meridian-mode",legacy);localStorage.removeItem("meridian-theme");}
-  var t=localStorage.getItem("meridian-theme")||"${DEFAULT_THEME}";
-  var m=localStorage.getItem("meridian-mode");
+  var t=localStorage.getItem(${JSON.stringify(STORAGE_KEYS.theme)})||"${DEFAULT_THEME}";
+  var m=localStorage.getItem(${JSON.stringify(STORAGE_KEYS.mode)});
   var colors=${THEME_COLORS};
   if(!colors[t]){t="${DEFAULT_THEME}";}
   e.setAttribute("data-theme",t);
-  var dark=m==="dark"||(!m&&window.matchMedia("(prefers-color-scheme: dark)").matches);
-  if(dark)e.classList.add("dark");
+  var dark=m==="dark";
+  e.classList.toggle("dark",dark);
   var meta=document.querySelector('meta[name="theme-color"]');
   if(!meta){meta=document.createElement("meta");meta.setAttribute("name","theme-color");document.head.appendChild(meta);}
   meta.setAttribute("content",colors[t][dark?1:0]);

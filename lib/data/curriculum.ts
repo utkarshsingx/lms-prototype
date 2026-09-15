@@ -1,7 +1,7 @@
 import type { Lesson, LessonType, Module } from "./types";
 
 /* Curricula are written as titles only. Type, length and completion state are
-   derived here so every course in the catalogue has a full, consistent tree
+   derived here so every paper in the catalogue has a full, consistent tree
    without 2,000 lines of hand-written lesson objects. */
 
 export type ModuleSpec = [title: string, summary: string, lessons: string[]];
@@ -15,36 +15,52 @@ function hash(s: string) {
   return Math.abs(h);
 }
 
-/** Type is inferred from the lesson title where it is obvious, else cycled. */
-function inferType(title: string, index: number, isLast: boolean): LessonType {
-  const t = title.toLowerCase();
-  if (t.startsWith("quiz") || t.includes("knowledge check")) return "quiz";
-  if (t.startsWith("lab") || t.includes("hands-on") || t.includes("workshop"))
-    return "lab";
-  if (t.includes("assignment") || t.includes("submit") || t.includes("brief"))
-    return "assignment";
-  if (t.includes("live") || t.includes("office hours")) return "live";
-  if (t.includes("reference") || t.includes("cheat sheet") || t.includes("handbook"))
-    return "pdf";
-  if (t.includes("deck") || t.includes("slides")) return "slides";
-  if (t.includes("simulation") || t.includes("scenario")) return "scorm";
+/** A title prefix fixes the lesson type. Prefixes only, never substrings:
+ *  "delivery" must not become a live class because it contains "live". */
+const PREFIX_TYPES: [prefix: string, type: LessonType][] = [
+  ["workspace:", "lab"],
+  ["live class:", "live"],
+  ["mock exam", "quiz"],
+  ["quiz", "quiz"],
+  ["final assessment:", "quiz"],
+  ["case study:", "scorm"],
+  ["scenario:", "scorm"],
+  ["interactive:", "xapi"],
+  ["reference:", "pdf"],
+  ["assignment:", "assignment"],
+  ["reading:", "article"],
+  ["slides:", "slides"],
+];
+
+/** Type comes from the title prefix where there is one, else it is cycled. */
+export function inferLessonType(
+  title: string,
+  index: number,
+  isLast: boolean,
+): LessonType {
+  const t = title.trim().toLowerCase();
+  const hit = PREFIX_TYPES.find(([prefix]) => t.startsWith(prefix));
+  if (hit) return hit[1];
   if (isLast) return "quiz";
   const cycle: LessonType[] = ["video", "video", "article", "video", "slides"];
   return cycle[index % cycle.length];
 }
 
 const MINUTES: Record<LessonType, [number, number]> = {
-  video: [6, 22],
-  article: [4, 12],
+  video: [8, 24],
+  article: [6, 15],
   pdf: [5, 15],
-  slides: [8, 18],
-  scorm: [15, 35],
+  slides: [10, 20],
+  scorm: [20, 40],
   xapi: [12, 30],
-  quiz: [8, 15],
-  assignment: [45, 120],
-  live: [45, 60],
-  lab: [20, 50],
+  quiz: [10, 20],
+  assignment: [60, 120],
+  live: [90, 120],
+  lab: [25, 50],
 };
+
+/** Mock exam lessons are timed sections, far longer than a topic quiz. */
+const MOCK_MINUTES: [number, number] = [60, 90];
 
 export function buildModules(
   courseId: string,
@@ -62,8 +78,10 @@ export function buildModules(
     summary,
     lessons: lessons.map((lt, li): Lesson => {
       const idx = counter++;
-      const type = inferType(lt, li, li === lessons.length - 1);
-      const [lo, hi] = MINUTES[type];
+      const type = inferLessonType(lt, li, li === lessons.length - 1);
+      const [lo, hi] = lt.toLowerCase().startsWith("mock exam")
+        ? MOCK_MINUTES
+        : MINUTES[type];
       const minutes = lo + (hash(courseId + lt) % (hi - lo + 1));
       const state: Lesson["state"] =
         idx < done ? "completed" : idx === done && done > 0 ? "in_progress" : "not_started";
@@ -99,6 +117,6 @@ export const lessonTypeLabel: Record<LessonType, string> = {
   xapi: "xAPI",
   quiz: "Quiz",
   assignment: "Assignment",
-  live: "Live session",
-  lab: "Lab",
+  live: "Live class",
+  lab: "Workspace",
 };

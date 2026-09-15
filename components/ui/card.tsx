@@ -1,5 +1,7 @@
 import { cn } from "@/lib/cn";
 
+/* Cards are flat in Prephasz: the 1px line is the elevation. The e1/e2 shadow
+   tokens are zeroed by flat themes and still cast in the others. */
 export function Card({
   className,
   interactive,
@@ -10,7 +12,7 @@ export function Card({
       className={cn(
         "rounded-[var(--radius-lg)] border border-line bg-surface shadow-[var(--shadow-e1)]",
         interactive &&
-          "transition-[box-shadow,border-color,transform] duration-200 ease-[var(--ease-out-quint)] hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[var(--shadow-e3)]",
+          "transition-[box-shadow,border-color] duration-200 ease-[var(--ease-out-quint)] hover:border-line-strong hover:shadow-[var(--shadow-e2)]",
         className,
       )}
       {...props}
@@ -37,7 +39,7 @@ export function CardHeader({
       )}
     >
       <div className="min-w-0">
-        <h3 className="text-[14.5px] leading-tight font-semibold tracking-[-0.01em] text-ink">
+        <h3 className="text-[15px] leading-tight font-bold tracking-[-0.01em] text-ink">
           {title}
         </h3>
         {sub ? (
@@ -61,7 +63,7 @@ export function SectionTitle({
 }) {
   return (
     <div className={cn("mb-3.5 flex items-end justify-between gap-4", className)}>
-      <h2 className="text-[11px] font-semibold tracking-[0.13em] text-ink-3 uppercase">
+      <h2 className="text-[11px] font-bold tracking-[0.12em] text-ink-3 uppercase">
         {children}
       </h2>
       {action}

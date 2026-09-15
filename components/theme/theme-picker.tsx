@@ -14,7 +14,7 @@ export function ModeToggle({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-0.5 rounded-[var(--radius-md)] border border-line bg-surface-2 p-0.5",
+        "inline-flex items-center gap-0.5 rounded-[var(--radius-pill)] border border-line bg-surface p-1",
         className,
       )}
     >
@@ -26,13 +26,14 @@ export function ModeToggle({ className }: { className?: string }) {
       ).map(([m, Icon, label]) => (
         <button
           key={m}
+          type="button"
           onClick={() => setMode(m)}
           aria-pressed={mode === m}
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] px-2.5 py-1.5 text-[12.5px] font-medium transition-all duration-150",
+            "inline-flex items-center justify-center gap-1.5 rounded-[var(--radius-pill)] px-3 py-1.5 text-[12.5px] font-semibold transition-colors duration-150",
             mode === m
-              ? "bg-surface text-ink shadow-[var(--shadow-e2)]"
-              : "text-ink-3 hover:text-ink",
+              ? "bg-nav-active text-nav-active-ink"
+              : "text-ink-3 hover:bg-cta-soft hover:text-ink",
           )}
         >
           <Icon className="size-3.5" />
@@ -64,20 +65,20 @@ export function ThemeGallery({ className }: { className?: string }) {
             onClick={() => setThemeId(t.id)}
             aria-pressed={active}
             className={cn(
-              "group relative rounded-[var(--radius-lg)] border p-3 text-left transition-[box-shadow,border-color,transform] duration-200 ease-[var(--ease-out-quint)]",
+              "group relative rounded-[var(--radius-lg)] border p-3 text-left transition-[box-shadow,border-color] duration-200 ease-[var(--ease-out-quint)]",
               active
-                ? "border-brand bg-brand-soft shadow-[0_0_0_3px_var(--ring)]"
-                : "border-line bg-surface hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[var(--shadow-e3)]",
+                ? "border-ink bg-cta-soft shadow-[0_0_0_3px_var(--ring-cta)]"
+                : "border-line bg-surface hover:border-line-strong hover:shadow-[var(--shadow-e2)]",
             )}
           >
             <ThemePreview theme={t} mode={mode} className="w-full" />
 
             <div className="mt-3 flex items-start gap-2 px-0.5">
               <div className="min-w-0 flex-1">
-                <p className="flex items-center gap-1.5 text-[13.5px] font-semibold tracking-[-0.01em] text-ink">
+                <p className="flex items-center gap-1.5 text-[13.5px] font-bold tracking-[-0.01em] text-ink">
                   {t.name}
                   {active ? (
-                    <span className="grid size-4 shrink-0 place-items-center rounded-full bg-brand text-on-brand">
+                    <span className="grid size-4 shrink-0 place-items-center rounded-full bg-nav-active text-nav-active-icon">
                       <Check className="size-2.5" strokeWidth={3.5} />
                     </span>
                   ) : null}
@@ -118,15 +119,15 @@ export function ThemeMenu({
         aria-expanded={open}
         aria-label="Change theme"
         className={cn(
-          "inline-flex h-9 items-center gap-2 rounded-[var(--radius-sm)] px-2.5 text-[13px] font-medium text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink",
-          open && "bg-surface-2 text-ink",
+          "inline-flex h-9 items-center gap-2 rounded-[var(--radius-md)] px-2.5 text-[13px] font-semibold text-ink-2 transition-colors hover:bg-cta-soft hover:text-ink",
+          open && "bg-cta-soft text-ink",
         )}
       >
         <Palette className="size-4" />
         {label ? <span className="hidden sm:inline">{label}</span> : null}
         <span className="flex gap-0.5">
           {(
-            [theme.light.brand, theme.light.jade, theme.light.ember] as const
+            [theme.light.cta, theme.light["surface-inv"], theme.light.jade] as const
           ).map((c, i) => (
             <span
               key={i}
@@ -156,7 +157,7 @@ export function ThemeMenu({
                 align === "right" ? "right-0" : "left-0",
               )}
             >
-              <p className="px-2 pt-1 pb-2 text-[10.5px] font-semibold tracking-[0.13em] text-ink-3 uppercase">
+              <p className="px-2 pt-1 pb-2 text-[11px] font-bold tracking-[0.12em] text-ink-3 uppercase">
                 Theme
               </p>
               <div className="scrollbar-slim max-h-[22rem] space-y-1 overflow-y-auto">
@@ -170,8 +171,8 @@ export function ThemeMenu({
                         setOpen(false);
                       }}
                       className={cn(
-                        "flex w-full items-center gap-3 rounded-[var(--radius-sm)] p-2 text-left transition-colors",
-                        active ? "bg-brand-soft" : "hover:bg-surface-2",
+                        "flex w-full items-center gap-3 rounded-[var(--radius-md)] p-2 text-left transition-colors",
+                        active ? "bg-cta-soft" : "hover:bg-surface-2",
                       )}
                     >
                       <ThemePreview
@@ -182,8 +183,8 @@ export function ThemeMenu({
                       <span className="min-w-0 flex-1">
                         <span
                           className={cn(
-                            "block truncate text-[13px] font-medium",
-                            active ? "text-brand" : "text-ink",
+                            "block truncate text-[13px]",
+                            active ? "font-bold text-ink" : "font-semibold text-ink",
                           )}
                         >
                           {t.name}
@@ -196,7 +197,7 @@ export function ThemeMenu({
                         </span>
                       </span>
                       {active ? (
-                        <Check className="size-4 shrink-0 text-brand" />
+                        <Check className="size-4 shrink-0 text-ink" strokeWidth={2.5} />
                       ) : null}
                     </button>
                   );

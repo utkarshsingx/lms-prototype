@@ -49,7 +49,7 @@ export function Avatar({
     <span
       title={name}
       className={cn(
-        "inline-grid shrink-0 place-items-center rounded-full font-semibold tracking-tight select-none",
+        "inline-grid shrink-0 place-items-center rounded-full font-bold tracking-tight select-none",
         sizes[size],
         tintFor(name),
         ring && "ring-2 ring-surface",
@@ -80,7 +80,7 @@ export function AvatarStack({
       {rest > 0 ? (
         <span
           className={cn(
-            "inline-grid place-items-center rounded-full bg-surface-3 font-semibold text-ink-2 ring-2 ring-surface",
+            "inline-grid place-items-center rounded-full bg-surface-3 font-bold text-ink-2 ring-2 ring-surface",
             sizes[size],
           )}
         >

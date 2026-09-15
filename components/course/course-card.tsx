@@ -7,8 +7,17 @@ import { Progress } from "@/components/ui/progress";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/cn";
 
-/** The cover: no stock photography. A generated field keyed to the course
- *  accent, so twelve cards in a grid never look like twelve identical boxes. */
+/** The ACCA paper code a course id carries: c-fr → FR, c-epsm → EPSM. */
+export function paperCode(course: Pick<Course, "id">) {
+  return course.id.replace(/^c-/, "").toUpperCase();
+}
+
+const TONES: Tone[] = ["neutral", "brand", "jade", "ember", "amber", "rose", "violet"];
+const toneOf = (accent: string): Tone =>
+  TONES.includes(accent as Tone) ? (accent as Tone) : "neutral";
+
+/** The cover: no stock photography. A black band carrying the paper code,
+ *  with a generated line field so a grid of papers never looks identical. */
 export function CourseCover({
   course,
   className,
@@ -20,39 +29,38 @@ export function CourseCover({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-t-[calc(var(--radius-lg)-1px)]",
+        "relative overflow-hidden rounded-t-[calc(var(--radius-lg)-1px)] bg-surface-inv",
         className,
       )}
-      style={{ backgroundColor: `var(--${course.accent}-soft)` }}
     >
       <svg
         viewBox="0 0 320 120"
         preserveAspectRatio="none"
-        className="size-full"
+        className="absolute inset-0 size-full text-cta"
         aria-hidden
       >
-        <g stroke={`var(--${course.accent})`} fill="none" opacity="0.45">
-          {Array.from({ length: 9 }, (_, i) => {
-            const y = 12 + i * 13;
+        <g stroke="currentColor" fill="none">
+          {Array.from({ length: 7 }, (_, i) => {
+            const y = 18 + i * 15;
             const amp = 6 + ((seed + i * 7) % 11);
             const phase = ((seed * (i + 3)) % 20) / 3;
             return (
               <path
                 key={i}
                 d={`M-10 ${y} C 60 ${y - amp + phase}, 120 ${y + amp}, 180 ${y - amp / 2} S 280 ${y + amp / 1.5}, 330 ${y}`}
-                strokeWidth={i % 3 === 0 ? 1.4 : 0.7}
-                opacity={0.3 + (i % 4) * 0.18}
+                strokeWidth={i % 3 === 0 ? 1.3 : 0.7}
+                opacity={0.1 + (i % 4) * 0.07}
               />
             );
           })}
         </g>
       </svg>
-      <span
-        className="absolute inset-x-0 bottom-0 h-14"
-        style={{
-          background: `linear-gradient(to top, var(--${course.accent}-soft), transparent)`,
-        }}
-      />
+      <span className="absolute bottom-3 left-4 flex items-end gap-2.5">
+        <span className="font-display text-[1.9rem] leading-none font-extrabold tracking-[-0.03em] text-ink-inv">
+          {paperCode(course)}
+        </span>
+        <span className="mb-1 h-1.5 w-7 rounded-full bg-cta" />
+      </span>
     </div>
   );
 }
@@ -69,21 +77,19 @@ export function CourseCard({
   return (
     <Link
       href={enrolled && showProgress ? `/learn/${course.slug}` : `/courses/${course.slug}`}
-      className="group flex flex-col overflow-hidden rounded-[var(--radius-lg)] border border-line bg-surface shadow-[var(--shadow-e1)] transition-[box-shadow,border-color,transform] duration-200 ease-[var(--ease-out-quint)] hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[var(--shadow-e3)]"
+      className="group flex flex-col overflow-hidden rounded-[var(--radius-lg)] border border-line bg-surface transition-[border-color,transform] duration-200 ease-[var(--ease-out-quint)] hover:-translate-y-0.5 hover:border-line-strong"
     >
       <CourseCover course={course} className="h-[104px]" />
 
       <div className="flex min-h-0 flex-1 flex-col p-4">
-        <div className="mb-2 flex items-center gap-2">
-          <Badge tone={course.accent as Tone}>{course.category}</Badge>
-          {course.compliance?.mandatory ? (
-            <Badge tone="rose" dot>
-              Required
-            </Badge>
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <Badge tone={toneOf(course.accent)}>{course.category}</Badge>
+          {course.status !== "published" ? (
+            <Badge tone="amber">{course.status === "in_review" ? "In review" : "Draft"}</Badge>
           ) : null}
         </div>
 
-        <h3 className="text-[15px] leading-snug font-semibold tracking-[-0.012em] text-ink transition-colors group-hover:text-brand">
+        <h3 className="text-[15px] leading-snug font-bold tracking-[-0.012em] text-ink decoration-cta decoration-2 underline-offset-4 group-hover:underline">
           {course.title}
         </h3>
         <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-ink-3">
@@ -99,7 +105,7 @@ export function CourseCard({
             <Star className="size-3.5 fill-amber text-amber" /> {course.rating}
           </span>
           <span className="inline-flex items-center gap-1.5 tnum">
-            <Users className="size-3.5" /> {course.enrolled.toLocaleString()}
+            <Users className="size-3.5" /> {course.enrolled.toLocaleString("en-IN")}
           </span>
         </div>
 
@@ -107,13 +113,13 @@ export function CourseCard({
           {showProgress && enrolled ? (
             <div>
               <div className="mb-1.5 flex items-baseline justify-between">
-                <span className="text-[11.5px] font-medium text-ink-2 tnum">
+                <span className="text-[11.5px] font-semibold text-ink-2 tnum">
                   {course.progress}% complete
                 </span>
                 <span className="text-[11.5px] text-ink-3">{course.level}</span>
               </div>
               <Progress
-                value={course.progress!}
+                value={course.progress ?? 0}
                 tone={course.progress === 100 ? "jade" : "brand"}
               />
             </div>

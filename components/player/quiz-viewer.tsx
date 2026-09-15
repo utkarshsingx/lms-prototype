@@ -7,33 +7,57 @@ import { cn } from "@/lib/cn";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
+const PASS_MARK = 50;
+
 const QUESTIONS = [
   {
     prompt:
-      "A 5-node cluster is partitioned 3/2. Which side can commit new entries?",
-    options: [
-      "Neither, until the partition heals",
-      "The 3-node side, because it holds a majority",
-      "The 2-node side, if it held the leader",
-      "Both, each with its own log",
-    ],
-    answer: 1,
-    why: "Commitment needs a quorum of 3. The minority side may still have the old leader, but it cannot advance the commit index — so at worst it serves stale reads, and never commits.",
+      "P acquires 80% of S. Consideration is $5,200k, NCI at fair value is $1,100k and S's net assets at acquisition, including a $500k fair value uplift on land, are $4,800k. What is goodwill on acquisition?",
+    options: ["$1,500k", "$1,360k", "$2,000k", "$400k"],
+    answer: 0,
+    why: "Goodwill is consideration plus NCI less net assets: 5,200 + 1,100 − 4,800 = $1,500k. $1,360k measures NCI at its proportionate share (20% of 4,800 = 960), $2,000k leaves out the land uplift and $400k ignores NCI altogether.",
   },
   {
-    prompt: "What does R + W > N buy you?",
+    prompt:
+      "Under IFRS 3, how are legal and professional fees incurred on an acquisition treated in the consolidated financial statements?",
     options: [
-      "Lower write latency",
-      "Overlapping read and write quorums, so a read sees the last write",
-      "Automatic conflict resolution",
-      "Tolerance of N − 1 node failures",
+      "Added to the consideration, so they increase goodwill",
+      "Expensed to profit or loss as incurred",
+      "Deducted from the subsidiary's net assets at acquisition",
+      "Charged to other comprehensive income",
     ],
     answer: 1,
-    why: "The inequality guarantees every read set shares at least one node with the last write set. That overlap is what makes read-your-writes hold.",
+    why: "IFRS 3 requires acquisition-related costs to be expensed as incurred. They are never part of consideration, so they do not affect goodwill. Costs of issuing shares or debt are the exception and follow IAS 32 and IFRS 9.",
+  },
+  {
+    prompt:
+      "Goodwill of $1,500k is impaired by $300k. NCI is measured at fair value and the parent holds 80%. How much of the impairment reduces group retained earnings?",
+    options: ["$300k", "$240k", "$60k", "Nothing: goodwill is amortised instead"],
+    answer: 1,
+    why: "With NCI at fair value, goodwill includes the NCI's share, so the impairment is split in the holding proportions: 80% × 300 = $240k against group retained earnings and 20% × 300 = $60k against NCI. Under the proportionate method all $300k would go to the group. Goodwill is never amortised.",
+  },
+  {
+    prompt:
+      "Which of these is included in the subsidiary's net assets at acquisition when calculating goodwill?",
+    options: [
+      "Profit the subsidiary earned after the acquisition date",
+      "The fair value uplift on the subsidiary's land at acquisition",
+      "The parent's share premium from the shares it issued",
+      "Dividends the parent paid in the year",
+    ],
+    answer: 1,
+    why: "Goodwill compares consideration and NCI with the fair value of the net assets acquired, so fair value adjustments at the acquisition date are included. Post-acquisition profit arises after control passes and is shared between group reserves and NCI instead.",
   },
 ];
 
-export function QuizViewer({ lesson }: { lesson: Lesson }) {
+export function QuizViewer({
+  lesson,
+  onContinue,
+}: {
+  lesson: Lesson;
+  /** Called by "Continue to next lesson" once the check is passed. */
+  onContinue?: () => void;
+}) {
   const [i, setI] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [checked, setChecked] = useState(false);
@@ -66,9 +90,9 @@ export function QuizViewer({ lesson }: { lesson: Lesson }) {
 
   if (done) {
     const pct = Math.round((score / QUESTIONS.length) * 100);
-    const passed = pct >= 60;
+    const passed = pct >= PASS_MARK;
     return (
-      <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-8 text-center shadow-[var(--shadow-e2)]">
+      <div className="rounded-[var(--radius-lg)] border border-line bg-surface p-8 text-center">
         <span
           className={cn(
             "mx-auto grid size-14 place-items-center rounded-full",
@@ -86,22 +110,28 @@ export function QuizViewer({ lesson }: { lesson: Lesson }) {
         </h3>
         <p className="mt-1.5 text-[14px] text-ink-2 tnum">
           {score} of {QUESTIONS.length} correct ·{" "}
-          {passed ? "lesson complete" : "60% needed to pass"}
+          {passed
+            ? "lesson complete"
+            : `${PASS_MARK}% needed, the same as the ACCA pass mark`}
         </p>
         <div className="mt-5 flex justify-center gap-2.5">
           <Button variant="secondary" size="sm" onClick={restart}>
             <RotateCcw className="size-3.5" /> Try again
           </Button>
-          {passed ? <Button size="sm">Continue to next lesson</Button> : null}
+          {passed && onContinue ? (
+            <Button size="sm" onClick={onContinue}>
+              Continue to next lesson
+            </Button>
+          ) : null}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-[var(--radius-lg)] border border-line bg-surface shadow-[var(--shadow-e2)]">
-      <div className="flex items-center gap-3 border-b border-line px-5 py-3.5">
-        <Badge tone="brand">Knowledge check</Badge>
+    <div className="rounded-[var(--radius-lg)] border border-line bg-surface">
+      <div className="flex flex-wrap items-center gap-3 border-b border-line px-5 py-3.5">
+        <Badge tone="brand">Knowledge check · FR group accounts</Badge>
         <span className="text-[12.5px] text-ink-3 tnum">
           Question {i + 1} of {QUESTIONS.length}
         </span>
@@ -111,7 +141,7 @@ export function QuizViewer({ lesson }: { lesson: Lesson }) {
               key={n}
               className={cn(
                 "h-1 w-6 rounded-full",
-                n < i ? "bg-jade" : n === i ? "bg-brand" : "bg-surface-3",
+                n < i ? "bg-jade" : n === i ? "bg-cta" : "bg-surface-3",
               )}
             />
           ))}
@@ -133,6 +163,7 @@ export function QuizViewer({ lesson }: { lesson: Lesson }) {
                 key={o}
                 disabled={checked}
                 onClick={() => setPicked(n)}
+                aria-pressed={isPicked}
                 className={cn(
                   "flex items-start gap-3 rounded-[var(--radius-md)] border px-3.5 py-3 text-left transition-all",
                   show && isAnswer
@@ -140,8 +171,8 @@ export function QuizViewer({ lesson }: { lesson: Lesson }) {
                     : show && isPicked
                       ? "border-rose bg-rose-soft"
                       : isPicked
-                        ? "border-brand bg-brand-soft shadow-[0_0_0_3px_var(--ring)]"
-                        : "border-line bg-surface hover:border-line-strong",
+                        ? "border-brand bg-cta-soft shadow-[0_0_0_3px_var(--ring)]"
+                        : "border-line bg-surface hover:border-line-strong hover:bg-cta-soft",
                 )}
               >
                 <span
@@ -174,6 +205,7 @@ export function QuizViewer({ lesson }: { lesson: Lesson }) {
 
         {checked ? (
           <div
+            aria-live="polite"
             className={cn(
               "mt-4 rounded-[var(--radius-md)] border px-4 py-3",
               correct
@@ -195,7 +227,7 @@ export function QuizViewer({ lesson }: { lesson: Lesson }) {
           </div>
         ) : null}
 
-        <div className="mt-5 flex items-center gap-3">
+        <div className="mt-5 flex flex-wrap items-center gap-3">
           {checked ? (
             <Button size="sm" onClick={next}>
               {i + 1 >= QUESTIONS.length ? "See result" : "Next question"}
@@ -206,7 +238,7 @@ export function QuizViewer({ lesson }: { lesson: Lesson }) {
             </Button>
           )}
           <span className="text-[12px] text-ink-3">
-            {lesson.minutes} min · unlimited attempts · not graded
+            {lesson.minutes} min · unlimited attempts · practice, not graded
           </span>
         </div>
       </div>

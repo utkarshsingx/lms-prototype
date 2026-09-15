@@ -16,7 +16,6 @@ import {
   personById,
   rubricById,
   submissions as allSubs,
-  type Rubric,
   type Submission,
 } from "@/lib/data";
 import { cn } from "@/lib/cn";
@@ -28,33 +27,66 @@ import { Segmented } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/field";
 import { Progress } from "@/components/ui/progress";
 import { EmptyState } from "@/components/ui/misc";
+import { RichText } from "@/components/assistant/rich-text";
+import { toast } from "@/components/ui/toast";
 
-const SAMPLE_ANSWER = `## Consistency model
+type Sample = { answer: string; feedback: string };
 
-I chose linearizable reads through the leader with a lease, and eventually
-consistent follower reads behind an explicit opt-in header. Most of our traffic
-is a dashboard that tolerates 200ms of staleness; the ledger endpoint does not,
-so it is the one caller that pays for the lease.
+/* Sample scripts, keyed by assessment, so the grader shows the kind of written
+   answer each paper actually produces. */
+const FR_CASE: Sample = {
+  answer: `**Profitability**
+Revenue grew 18% to $42.6m, but gross margin fell from 34.0% to 29.5%. The note on the new contract with Varro Retail explains most of it: the contract was won on lower prices, so the extra volume came at a thinner margin. Operating margin fell less, from 14.2% to 12.8%, because administrative expenses stayed flat while revenue grew.
 
-## Under partition
+**Liquidity and working capital**
+The current ratio fell from 1.6 to 1.1 and the quick ratio from 1.0 to 0.6. Receivables collection period rose from 41 to 58 days, which matches the 60-day credit terms given to Varro Retail. Inventory holding period rose from 52 to 67 days. Halden Co is funding its growth through working capital, and the overdraft of $3.1m (nil last year) shows where the cash came from.
 
-A minority partition keeps serving reads from its stale snapshot and rejects
-writes with 503. It cannot commit, because commit needs 3 of 5. The lease means
-the old leader stops answering linearizable reads within 4s of losing contact,
-which bounds staleness to the lease duration rather than to the partition
-duration. That bound is the part I would defend hardest.
+**Gearing**
+Gearing (debt to debt plus equity) rose from 22% to 38% after the $8m loan notes issued to buy the new warehouse. Interest cover fell from 9.1 times to 4.3 times. That is still comfortable, but the loan notes carry a covenant of 3.5 times.
 
-## Signals
+**Conclusion**
+Halden Co has grown quickly but less profitably, and liquidity is now the main risk. If the receivables collection period stays at 58 days the overdraft will keep rising. I would recommend renegotiating credit terms with Varro Retail before the loan note covenant is tested.`,
+  feedback:
+    "Clear structure, and every ratio is interpreted rather than just calculated, which is what the marking guide rewards. Linking the fall in gross margin to the Varro Retail contract, and the longer collection period to its credit terms, is exactly the kind of cause the examiner looks for.\n\nWhere to push next: the covenant is your strongest point but it arrives in the last paragraph. Say how close interest cover is to 3.5 times and what a breach would mean for the loan notes. Also comment on whether the new warehouse should bring the inventory holding period down next year.",
+};
 
-Commit index lag per follower, lease renewals per second, and the count of
-elections in a 5-minute window. The third one is the alert: a healthy cluster has
-zero, and any non-zero value is either a real failure or a config problem.
+const PM_REPORT: Sample = {
+  answer: `**Summary for the production director**
+Actual profit for August was $184,000 against a budget of $226,000, an adverse difference of $42,000. Two variances explain most of it: an adverse material mix variance of $18,400 and an adverse labour efficiency variance of $15,600. Sales variances were small.
 
-## Alternative rejected
+**Materials**
+The mix variance is adverse because more of the expensive ingredient (cashew paste at $12 per kg) was used in place of the cheaper filler. The yield variance is $6,200 favourable, so the richer mix produced more output per batch. Mix and yield together are $12,200 adverse. The purchasing manager changed filler supplier in July after a quality complaint, which is the likely cause, so this is an operational decision rather than waste.
 
-Quorum reads on every request. Correct, simpler to reason about, and it doubles
-p99 read latency at our fan-out. The lease buys the same guarantee for one extra
-failure mode, which the runbook covers.`;
+**Labour**
+Labour efficiency is $15,600 adverse: 1,300 hours at the standard rate of $12. Of this, 400 hours were lost when the line stopped on 14 August. The remaining 900 hours are spread across every shift and are consistent with new staff on the second shift still being trained.
+
+**Recommendations**
+1. Revise the standard mix if the new filler supplier is kept, otherwise the mix variance will recur every month and stop being useful.
+2. Report idle time separately so the cost of training the second shift is visible on its own.
+3. Review the labour standard in October, once the new staff are trained.`,
+  feedback:
+    "Good use of the mix and yield split: you calculated both and, more importantly, explained that the richer mix is an operational choice rather than waste. The recommendations are specific and tied to the causes you found.\n\nWhere to push next: idle time is a variance in its own right, so take the 400 idle hours ($4,800) out before calculating efficiency. That changes efficiency to $10,800 adverse and makes your training point stronger. Also check whether the small sales variances hide a volume effect and a price effect that cancel each other out.",
+};
+
+const EPSM_SHORT: Sample = {
+  answer: `**Scenario**
+Your manager asks you to hold back a supplier invoice until after the year end, so that this year's results meet the bonus target.
+
+**Principles at risk**
+Integrity and objectivity. Recording the invoice late would make the financial statements misleading, and the bonus creates a self-interest threat for my manager and, indirectly, for me.
+
+**What I would do**
+Explain to my manager that the invoice must be recorded in the period it relates to. If they insist, raise it with the finance director and keep a written note of both conversations. If that does not resolve it, take advice from ACCA's ethics advisory service before deciding whether to escalate further.`,
+  feedback:
+    "You named the right principles and spotted the self-interest threat, and your escalation steps are in a sensible order.\n\nWhere to push next: name the safeguard at each step, and say why the written note matters. It protects you as well as the company if the matter is raised later.",
+};
+
+const SAMPLES: Record<string, Sample> = {
+  "a-fr-case": FR_CASE,
+  "a-pm-variance": PM_REPORT,
+  "a-pm-mock": PM_REPORT,
+  "a-epsm-final": EPSM_SHORT,
+};
 
 function statusTone(s: Submission["status"]): Tone {
   return s === "graded"
@@ -96,6 +128,7 @@ export function GradingQueue() {
   const complete = rubric
     ? rubric.criteria.every((c) => scores[c.id] != null)
     : false;
+  const sample = (assessment && SAMPLES[assessment.id]) ?? FR_CASE;
 
   return (
     <div className="grid gap-6 xl:grid-cols-[21rem_1fr]">
@@ -118,7 +151,7 @@ export function GradingQueue() {
           <EmptyState
             icon={<Check />}
             title="Queue is clear"
-            sub="Nothing is waiting on you. Auto-graded submissions never enter this queue."
+            sub="Nothing is waiting on you. Objective questions are marked automatically and never enter this queue."
           />
         ) : (
           <div className="space-y-2">
@@ -138,8 +171,8 @@ export function GradingQueue() {
                   className={cn(
                     "w-full rounded-[var(--radius-lg)] border p-3.5 text-left transition-all",
                     on
-                      ? "border-brand bg-brand-soft shadow-[var(--shadow-e2)]"
-                      : "border-line bg-surface hover:border-line-strong hover:shadow-[var(--shadow-e2)]",
+                      ? "border-cta-strong bg-cta-soft"
+                      : "border-line bg-surface hover:border-line-strong hover:bg-cta-soft",
                   )}
                 >
                   <div className="flex items-center gap-2.5">
@@ -162,6 +195,7 @@ export function GradingQueue() {
                           month: "short",
                           hour: "2-digit",
                           minute: "2-digit",
+                          timeZone: "Asia/Kolkata",
                         })
                       : "Not submitted"}
                     {s.attempt > 1 ? ` · attempt ${s.attempt}` : ""}
@@ -185,7 +219,7 @@ export function GradingQueue() {
           <EmptyState
             icon={<FileText />}
             title="Pick a submission"
-            sub="Choose something from the queue to start marking."
+            sub="Choose a script from the queue to start marking."
           />
         ) : (
           <div className="space-y-4">
@@ -226,24 +260,34 @@ export function GradingQueue() {
 
             <Card>
               <CardHeader
-                title="Submission"
-                sub="Markdown, submitted 4 Sep 23:58 IST · 1 of 1 attempts used"
+                title="Script"
+                sub={`Typed answer · ${
+                  active.submittedAt
+                    ? `submitted ${new Date(active.submittedAt).toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        timeZone: "Asia/Kolkata",
+                      })} IST`
+                    : "not submitted"
+                } · attempt ${active.attempt} of ${assessment.attempts}`}
                 action={
                   <Button variant="secondary" size="xs">
-                    <FileText className="size-3.5" /> Open original
+                    <FileText className="size-3.5" /> Open script
                   </Button>
                 }
               />
-              <pre className="scrollbar-slim max-h-96 overflow-y-auto border-t border-line px-5 py-4 font-sans text-[13.5px] leading-[1.7] whitespace-pre-wrap text-ink-2">
-                {SAMPLE_ANSWER}
-              </pre>
+              <div className="scrollbar-slim max-h-96 overflow-y-auto border-t border-line px-5 py-4 text-[13.5px] leading-[1.7] text-ink-2 [overflow-wrap:anywhere]">
+                <RichText text={sample.answer} />
+              </div>
             </Card>
 
             {rubric ? (
               <Card>
                 <CardHeader
                   title={rubric.name}
-                  sub="Click a level per criterion. The learner sees the same grid with your choice highlighted."
+                  sub="Choose a level for each criterion. The learner sees the same grid with your choice highlighted."
                   action={
                     <span className="text-[13px] font-semibold text-ink tnum">
                       {total} / {rubric.total}
@@ -258,7 +302,9 @@ export function GradingQueue() {
                           {c.name}
                         </p>
                         <span className="shrink-0 text-[12px] text-ink-3 tnum">
-                          {scores[c.id] ?? "—"} / {c.weight}
+                          {scores[c.id] != null
+                            ? `${scores[c.id]} / ${c.weight}`
+                            : `out of ${c.weight}`}
                         </span>
                       </div>
                       <div className="mt-2.5 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -273,14 +319,14 @@ export function GradingQueue() {
                               className={cn(
                                 "rounded-[var(--radius-md)] border px-3 py-2.5 text-left transition-all",
                                 on
-                                  ? "border-brand bg-brand-soft shadow-[0_0_0_3px_var(--ring)]"
+                                  ? "border-cta-strong bg-cta-soft shadow-[0_0_0_3px_var(--ring)]"
                                   : "border-line bg-surface hover:border-line-strong",
                               )}
                             >
                               <p
                                 className={cn(
                                   "flex items-baseline justify-between text-[12px] font-semibold",
-                                  on ? "text-brand" : "text-ink-2",
+                                  on ? "text-ink" : "text-ink-2",
                                 )}
                               >
                                 {l.label}
@@ -323,16 +369,12 @@ export function GradingQueue() {
             <Card>
               <CardHeader
                 title="Feedback"
-                sub="Goes to the learner with the rubric. Required when the score is below the pass mark."
+                sub="Goes to the learner with the rubric. Required when the mark is below the pass mark."
                 action={
                   <Button
                     variant="ghost"
                     size="xs"
-                    onClick={() =>
-                      setFeedback(
-                        "Strong on the partition analysis — bounding staleness to the lease rather than the partition is exactly the right instinct, and you defended it. The alternative you rejected was rejected for a real reason with a number attached.\n\nWhere to push next: the operability section names three signals but no thresholds, so nobody could act on it at 3am without asking you. Give the elections-per-5-minutes alert a threshold and a first action.",
-                      )
-                    }
+                    onClick={() => setFeedback(sample.feedback)}
                   >
                     <Sparkles className="size-3.5" /> Draft from the rubric
                   </Button>
@@ -343,7 +385,7 @@ export function GradingQueue() {
                   rows={6}
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
-                  placeholder="What was strong, and the single most useful thing to do differently next time."
+                  placeholder="What earned marks, and the single most useful thing to do differently in the exam."
                 />
                 <p className="mt-2 text-[11.5px] text-ink-3">
                   A draft is a starting point. It is not sent until you edit and
@@ -353,19 +395,34 @@ export function GradingQueue() {
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <Button
                     disabled={!complete || !feedback.trim() || sent}
-                    onClick={() => setSent(true)}
+                    onClick={() => {
+                      setSent(true);
+                      toast({
+                        title: "Marks released",
+                        body: `${learner?.name ?? "The learner"} can see ${pct}% and your feedback now.`,
+                      });
+                    }}
                   >
                     {sent ? (
                       <>
-                        <Check className="size-4" /> Grade released
+                        <Check className="size-4" /> Marks released
                       </>
                     ) : (
                       <>
-                        <Send className="size-4" /> Release grade
+                        <Send className="size-4" /> Release marks
                       </>
                     )}
                   </Button>
-                  <Button variant="secondary">
+                  <Button
+                    variant="secondary"
+                    onClick={() =>
+                      toast({
+                        title: "Revision requested",
+                        body: `${learner?.name ?? "The learner"} can resubmit without using an attempt.`,
+                        tone: "info",
+                      })
+                    }
+                  >
                     <MessageSquare className="size-4" /> Ask for a revision
                   </Button>
                   {!complete ? (
