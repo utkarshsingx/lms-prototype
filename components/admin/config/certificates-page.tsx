@@ -22,6 +22,7 @@ import { FileDrop } from "@/components/ui/file-drop";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
 import { AdminConfigFrame, BlockHeading, MiniLabel, queueExport } from "./shared";
+import { inkOn } from "../core/shared";
 
 const KIND_LABEL: Record<CertificateTemplate["kind"], string> = {
   joint: "Joint certificate",
@@ -91,7 +92,7 @@ function CertificatePreview({ tpl, verification }: { tpl: CertificateTemplate; v
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             {uni ? (
-              <span className="grid size-10 place-items-center rounded-[10px] font-display text-[15px] font-bold text-on-accent" style={{ backgroundColor: uni.branding.primary }}>
+              <span className="grid size-10 place-items-center rounded-[10px] font-display text-[15px] font-bold" style={{ backgroundColor: uni.branding.primary, color: inkOn(uni.branding.primary) }}>
                 {uni.branding.logoInitials}
               </span>
             ) : null}

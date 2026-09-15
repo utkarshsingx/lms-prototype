@@ -187,7 +187,7 @@ export function LeaderboardView({ student }: { student: Student }) {
         sub={`${cohort?.name ?? "Your cohort"}, ranked by points from practice, mocks, attendance and streaks.`}
         badge={<ScopeChip>{cohort?.size ?? ranked.length} learners in your cohort</ScopeChip>}
         actions={
-          <LinkButton href="/discussions" variant="outline">
+          <LinkButton href="/discussions?space=cohort" variant="outline">
             <MessagesSquare aria-hidden className="size-4" />
             Cohort community
           </LinkButton>
@@ -214,18 +214,18 @@ export function LeaderboardView({ student }: { student: Student }) {
                 </p>
               </div>
             </div>
-            <dl className="grid grid-cols-3 gap-x-6 gap-y-3 border-t border-ink-inv/15 pt-4 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6">
+            <dl className="grid grid-cols-3 gap-x-4 gap-y-3 border-t border-ink-inv/15 pt-4 sm:gap-x-6 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6">
               <div className="min-w-0">
                 <dt className="text-[12px] text-ink-inv/65">{period === "overall" ? "Points" : "This week"}</dt>
-                <dd className="mt-1 font-display text-[24px] leading-none font-bold text-cta tnum">{groupIndian(score(me))}</dd>
+                <dd className="mt-1 font-display text-[20px] leading-none font-bold text-cta tnum sm:text-[24px]">{groupIndian(score(me))}</dd>
               </div>
               <div className="min-w-0">
                 <dt className="text-[12px] text-ink-inv/65">Streak</dt>
-                <dd className="mt-1 font-display text-[24px] leading-none font-bold text-ink-inv tnum">{me.streak} days</dd>
+                <dd className="mt-1 font-display text-[20px] leading-none font-bold text-ink-inv tnum sm:text-[24px]">{me.streak} days</dd>
               </div>
               <div className="min-w-0">
-                <dt className="text-[12px] text-ink-inv/65">This week</dt>
-                <dd className="mt-1 font-display text-[24px] leading-none font-bold text-ink-inv tnum">{me.change > 0 ? `+${me.change}` : me.change}</dd>
+                <dt className="text-[12px] text-ink-inv/65">Rank change</dt>
+                <dd className="mt-1 font-display text-[20px] leading-none font-bold text-ink-inv tnum sm:text-[24px]">{me.change > 0 ? `+${me.change}` : me.change}</dd>
               </div>
             </dl>
           </div>

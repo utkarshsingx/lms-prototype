@@ -242,9 +242,16 @@ export function DocumentReview({
               </Note>
             ) : null}
             {allVerified && (claim.stage === "Documents pending" || claim.stage === "Estimated") ? (
-              <Button type="button" size="sm" className="w-full" onClick={() => onRecordEstimate(claim.student.id)}>
+              <GatedButton
+                size="sm"
+                className="w-full"
+                wrapperClassName="w-full"
+                allowed={canEdit}
+                reason={reason}
+                onClick={() => onRecordEstimate(claim.student.id)}
+              >
                 Record estimated exemptions
-              </Button>
+              </GatedButton>
             ) : null}
           </div>
 

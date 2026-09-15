@@ -52,7 +52,8 @@ import { Avatar } from "@/components/ui/avatar";
 import { AgendaList } from "@/components/ui/calendar";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
-import { GatedButton, hoursBetween, OPS_NOW, plural } from "./shared";
+import { slaState } from "@/components/programme/support/support-helpers";
+import { GatedButton, plural } from "./shared";
 
 const DEC = examSessionById("es-2026-dec")!;
 const SEP = examSessionById("es-2026-sep")!;
@@ -103,22 +104,29 @@ const pendingResults = allStudents.flatMap((s) =>
 );
 
 const openTickets = tickets.filter((t) => t.status !== "resolved");
+// Same SLA rule and clock as the support queue, so the two pages show the same count.
 // Waiting on the student pauses the SLA clock.
 const breaching = openTickets
-  .filter((t) => t.status !== "waiting-on-student")
-  .map((t) => ({ ticket: t, over: hoursBetween(t.created, OPS_NOW) - t.slaHours }))
-  .filter((x) => x.over > 0)
+  .map((t) => ({ ticket: t, sla: slaState(t) }))
+  .filter((x) => x.sla.breached)
+  .map(({ ticket, sla }) => ({ ticket, over: Math.max(1, Math.round(-sla.hoursLeft)) }))
   .sort((a, b) => b.over - a.over);
 
+const feeRow = (s: (typeof allStudents)[number]) => ({
+  id: s.id,
+  name: s.name,
+  amount: s.fees.due,
+  since: s.fees.nextDueDate ?? ACCA_TODAY,
+});
 const overdueFees = allStudents
   .filter((s) => s.fees.status === "overdue")
-  .map((s) => ({
-    id: s.id,
-    name: s.name,
-    amount: s.fees.due,
-    since: s.fees.nextDueDate ?? ACCA_TODAY,
-  }))
+  .map(feeRow)
   .sort((a, b) => a.since.localeCompare(b.since));
+const dueFees = allStudents
+  .filter((s) => s.fees.status === "due")
+  .map(feeRow)
+  .sort((a, b) => a.since.localeCompare(b.since));
+const DUE_ROWS_SHOWN = 3;
 
 const runningCohorts = allCohorts.filter((c) => c.status === "running");
 
@@ -458,9 +466,9 @@ export function ProgrammeDashboard() {
             <QueueCard
               icon={<IndianRupee />}
               tone="amber"
-              title="Payments overdue"
-              count={overdueFees.length}
-              sub={`${formatINR(overdueFees.reduce((s, f) => s + f.amount, 0))} overdue from enrolled students`}
+              title="Payments due"
+              count={overdueFees.length + dueFees.length}
+              sub={`${plural(overdueFees.length, "student")} overdue, ${formatINR(overdueFees.reduce((s, f) => s + f.amount, 0))} · ${plural(dueFees.length, "instalment")} due, ${formatINR(dueFees.reduce((s, f) => s + f.amount, 0))}`}
               href="/programme/finance"
               hrefLabel="Open fees and payments"
               action={
@@ -468,10 +476,13 @@ export function ProgrammeDashboard() {
                   allowed={canRecord}
                   reason="Needs the Record finance permission."
                   size="xs"
-                  disabled={feeReminded.length === overdueFees.length}
+                  disabled={feeReminded.length === overdueFees.length + dueFees.length}
                   onClick={() => {
-                    setFeeReminded(overdueFees.map((f) => f.id));
-                    toast({ title: `Payment reminder sent to ${plural(overdueFees.length, "student")}`, body: "Template: Instalment overdue · WhatsApp and email" });
+                    setFeeReminded([...overdueFees, ...dueFees].map((f) => f.id));
+                    toast({
+                      title: `Payment reminder sent to ${plural(overdueFees.length + dueFees.length, "student")}`,
+                      body: "Templates: Instalment overdue and Instalment due · WhatsApp and email",
+                    });
                   }}
                 >
                   <BellRing className="size-3.5" />
@@ -493,6 +504,23 @@ export function ProgrammeDashboard() {
                   }
                 />
               ))}
+              {dueFees.slice(0, DUE_ROWS_SHOWN).map((f) => (
+                <QueueRow
+                  key={f.id}
+                  primary={f.name}
+                  secondary={`Instalment due ${formatAccaDate(f.since)}`}
+                  end={
+                    feeReminded.includes(f.id) ? (
+                      <StatusPill status="Reminder sent" tone="jade" size="sm" />
+                    ) : (
+                      <span className="font-mono text-[12.5px] font-semibold text-ink tnum">{formatINR(f.amount)}</span>
+                    )
+                  }
+                />
+              ))}
+              {dueFees.length > DUE_ROWS_SHOWN ? (
+                <li className="px-5 py-2.5 text-[12px] text-ink-3">{plural(dueFees.length - DUE_ROWS_SHOWN, "more instalment")} due on Fees & payments.</li>
+              ) : null}
             </QueueCard>
           ) : null}
         </div>

@@ -269,7 +269,7 @@ export function WhatsappInbox() {
 
   const dayLabel = active.lastAt.startsWith("2026-09-14")
     ? "Today"
-    : new Date(active.lastAt).toLocaleDateString("en-GB", { weekday: "long" });
+    : new Date(active.lastAt).toLocaleDateString("en-GB", { weekday: "long", timeZone: "Asia/Kolkata" });
 
   return (
     <div className="grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)]">
@@ -366,7 +366,17 @@ export function WhatsappInbox() {
               {stage.label}
             </Badge>
           )}
-          <IconButton label="Call with the voice agent" size="sm">
+          <IconButton
+            label="Call with the voice agent"
+            size="sm"
+            onClick={() =>
+              toast({
+                title: `Voice agent calling ${first}`,
+                body: `${active.phone} · the transcript appears in Voice agent when the call ends.`,
+                tone: "info",
+              })
+            }
+          >
             <Phone className="size-3.5" />
           </IconButton>
         </div>

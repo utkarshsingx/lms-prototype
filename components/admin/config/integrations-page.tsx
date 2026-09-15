@@ -15,6 +15,7 @@ import { FilterBar, FilterSelect } from "@/components/ui/filter-bar";
 import { FormDrawer } from "@/components/ui/form-drawer";
 import { Field, Input, Select, Switch } from "@/components/ui/field";
 import { toast } from "@/components/ui/toast";
+import { useRole } from "@/lib/role";
 import { AdminConfigFrame, BlockHeading, DEMO_NOW, queueExport } from "./shared";
 
 type IntegrationRow = Omit<Integration, "category"> & { category: string; method: string };
@@ -59,6 +60,7 @@ const SEED_LOGS: SyncLog[] = [
 const STATUS_LABEL: Record<IntegrationRow["status"], string> = { connected: "Connected", attention: "Needs attention", "not-connected": "Not connected" };
 
 export function IntegrationsPage() {
+  const { persona } = useRole();
   const [rows, setRows] = useState<IntegrationRow[]>(() => [...seedIntegrations.map((i) => ({ ...i, method: METHOD[i.id] ?? "API" })), ...EXTRA]);
   const [logs, setLogs] = useState<SyncLog[]>(SEED_LOGS);
   const [view, setView] = useState("all");
@@ -80,7 +82,7 @@ export function IntegrationsPage() {
 
   const syncNow = (row: IntegrationRow) => {
     setRows((list) => list.map((r) => (r.id === row.id ? { ...r, lastSync: DEMO_NOW, status: r.status === "attention" ? "connected" : r.status } : r)));
-    addLog(row, "Manual sync", "success", "Started by Neha Kapoor");
+    addLog(row, "Manual sync", "success", `Started by ${persona.name}`);
     toast({ title: `${row.name} synced`, body: `Last sync ${formatDateTime(DEMO_NOW)}` });
   };
 
@@ -311,7 +313,7 @@ export function IntegrationsPage() {
                 size="sm"
                 onClick={() => {
                   setRows((list) => list.map((r) => (r.id === configuring.id ? { ...r, status: "not-connected", lastSync: "" } : r)));
-                  addLog(configuring, "Disconnected", "success", "Disconnected by Neha Kapoor");
+                  addLog(configuring, "Disconnected", "success", `Disconnected by ${persona.name}`);
                   toast({ title: `${configuring.name} disconnected`, tone: "warning" });
                   setConfiguring(null);
                 }}

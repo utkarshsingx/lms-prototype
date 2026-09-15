@@ -133,7 +133,25 @@ function buildApplications(): Application[] {
   return out;
 }
 
-export const applications: Application[] = buildApplications();
+const LAST_WORKING_DAY = "2026-09-12";
+const pastDate = (iso: string) => (iso.slice(0, 10) > LAST_WORKING_DAY ? LAST_WORKING_DAY : iso.slice(0, 10));
+
+/*
+ * The generator can date a decided record after the demo "today" (an offer dated 29 Sep, a final
+ * round on 17 Sep for an accepted offer). Decided records are pulled back to the last working day,
+ * and generated CTC figures are rounded to one decimal, so every page reads the same history.
+ */
+function normaliseApplication(a: Application): Application {
+  const decided = a.stage === "offer" || a.stage === "joined" || a.stage === "rejected";
+  const interview =
+    a.interview && decided && a.interview.date.slice(0, 10) >= "2026-09-14"
+      ? { ...a.interview, date: `${pastDate(addDays(a.appliedOn, 5))}T${a.interview.date.slice(11, 16) || "11:00"}` }
+      : a.interview;
+  const offer = a.offer ? { ...a.offer, ctcLPA: Math.round(a.offer.ctcLPA * 10) / 10, offeredOn: pastDate(a.offer.offeredOn) } : undefined;
+  return { ...a, updated: a.updated > "2026-09-14" ? pastDate(a.updated) : a.updated, interview, offer };
+}
+
+export const applications: Application[] = buildApplications().map(normaliseApplication);
 
 export function applicationsForStudent(studentId: string) {
   return applications.filter((a) => a.studentId === studentId);

@@ -22,6 +22,7 @@ import { FormDrawer } from "@/components/ui/form-drawer";
 import { Checkbox, Field, Input, Select, Switch, Textarea } from "@/components/ui/field";
 import { Matrix, MatrixCheck } from "@/components/ui/matrix";
 import { toast } from "@/components/ui/toast";
+import { useRole } from "@/lib/role";
 import { AdminConfigFrame, BlockHeading, WithHint } from "./shared";
 
 /* ------------------------------------------------------------ channels */
@@ -81,6 +82,7 @@ type TemplateRow = Omit<MessageTemplate, "channel"> & { channel: ChannelId };
 /* ------------------------------------------------------------ page */
 
 export function CommunicationsPage() {
+  const { persona } = useRole();
   const [channels, setChannels] = useState<ChannelRow[]>([...communicationChannels, VOICE]);
   const [routing, setRouting] = useState<Record<string, ChannelId[]>>(() => Object.fromEntries(EVENTS.map((e) => [e.id, e.on])));
   const [templates, setTemplates] = useState<TemplateRow[]>(messageTemplates);
@@ -393,7 +395,7 @@ export function CommunicationsPage() {
               </Select>
             </Field>
             <Field label="Send to">
-              <Input name="to" required defaultValue={testing === "email" || testing === "in-app" ? "neha.kapoor@zskillup.com" : "+91 98450 21133"} />
+              <Input name="to" required defaultValue={testing === "email" || testing === "in-app" ? persona.email : "+91 98450 21133"} />
             </Field>
           </div>
         ) : null}
@@ -453,7 +455,7 @@ export function CommunicationsPage() {
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => toast({ title: `Test sent: ${editing.name}`, body: `On ${nameOf(editing.channel)} to Neha Kapoor`, tone: "info" })}
+              onClick={() => toast({ title: `Test sent: ${editing.name}`, body: `On ${nameOf(editing.channel)} to ${persona.name}`, tone: "info" })}
             >
               <Send className="size-3.5" />
               Send test of this template

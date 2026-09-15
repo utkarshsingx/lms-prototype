@@ -314,7 +314,9 @@ function ProgrammeList({
                 </div>
                 <div className="min-w-0">
                   <dt className="text-[11.5px] text-ink-3">Intakes</dt>
-                  <dd className="font-display text-[20px] font-bold text-ink tnum">{intakes.filter((i) => i.programmeIds.includes(p.id)).length}</dd>
+                  <dd className="font-display text-[20px] font-bold text-ink tnum">
+                    {intakes.filter((i) => i.programmeIds.includes(p.id) || p.intakeIds.includes(i.id)).length}
+                  </dd>
                 </div>
               </dl>
               <div className="mt-3 flex flex-wrap gap-1">

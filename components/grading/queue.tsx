@@ -195,6 +195,7 @@ export function GradingQueue() {
                           month: "short",
                           hour: "2-digit",
                           minute: "2-digit",
+                          timeZone: "Asia/Kolkata",
                         })
                       : "Not submitted"}
                     {s.attempt > 1 ? ` · attempt ${s.attempt}` : ""}
@@ -267,6 +268,7 @@ export function GradingQueue() {
                         month: "short",
                         hour: "2-digit",
                         minute: "2-digit",
+                        timeZone: "Asia/Kolkata",
                       })} IST`
                     : "not submitted"
                 } · attempt ${active.attempt} of ${assessment.attempts}`}

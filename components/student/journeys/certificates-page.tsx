@@ -435,7 +435,7 @@ export function CertificatesView({ student }: { student: Student }) {
   const copyLink = (c: Earned) => {
     const url = `https://${VERIFY_HOST}${c.id}`;
     try {
-      void navigator.clipboard?.writeText(url);
+      navigator.clipboard?.writeText(url).catch(() => {});
     } catch {
       /* clipboard blocked: the toast still shows the link */
     }

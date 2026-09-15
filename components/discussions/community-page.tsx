@@ -10,23 +10,23 @@ import { Forum } from "./forum";
 
 type Space = "all" | "cohort";
 
-export function CommunityPage() {
+export function CommunityPage({ initialSpace }: { initialSpace?: string } = {}) {
   const s = useStudentRecord();
-  return <CommunityView key={s.id} s={s} />;
+  return <CommunityView key={s.id} s={s} initialSpace={initialSpace === "cohort" ? "cohort" : "all"} />;
 }
 
-function CommunityView({ s }: { s: Student }) {
+function CommunityView({ s, initialSpace }: { s: Student; initialSpace: Space }) {
   const uni = universityById(s.universityId);
   const universityCohort = s.cohortIds.map((id) => cohortById(id)).find((c) => c?.type === "university");
   const hasCohortSpace = s.type === "undergraduate" && Boolean(universityCohort);
-  const [space, setSpace] = useState<Space>("all");
+  const [space, setSpace] = useState<Space>(initialSpace);
 
   const switcher = hasCohortSpace ? (
     <div role="tablist" aria-label="Community spaces" className="flex flex-wrap gap-2">
       {(
         [
           { id: "all", label: "All learners", sub: "Every ACCA learner and faculty", icon: Globe2 },
-          { id: "cohort", label: `${uni?.shortName ?? "University"} cohort`, sub: universityCohort?.name ?? "", icon: Building2 },
+          { id: "cohort", label: "University cohort community", sub: universityCohort?.name ?? uni?.name ?? "", icon: Building2 },
         ] as const
       ).map((t) => {
         const active = space === t.id;

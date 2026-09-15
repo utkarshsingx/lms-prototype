@@ -27,6 +27,7 @@ import { Matrix } from "@/components/ui/matrix";
 import { LineChart, StackedBar } from "@/components/ui/charts";
 import { Timeline } from "@/components/ui/timeline";
 import { toast } from "@/components/ui/toast";
+import { useRole } from "@/lib/role";
 import { AdminConfigFrame, BlockHeading, DEMO_NOW, addHoursIso, formatHours, hoursBetween, queueExport } from "./shared";
 
 type Level = 1 | 2 | 3;
@@ -84,6 +85,7 @@ function seedRows(matrix: EscalationRule[]): EscRow[] {
 }
 
 export function EscalationsPage() {
+  const { persona } = useRole();
   const [matrix, setMatrix] = useState<EscalationRule[]>(escalationMatrix);
   const [rows, setRows] = useState<EscRow[]>(() => seedRows(escalationMatrix));
   const [status, setStatus] = useState("escalated");
@@ -414,7 +416,7 @@ export function EscalationsPage() {
                     ownerId,
                     level,
                     escalatedAt: level !== r.level ? DEMO_NOW : r.escalatedAt,
-                    history: [...r.history, { id: `h-re-${r.history.length + 1}`, at: DEMO_NOW, actor: "Neha Kapoor", action: `Reassigned to ${staffName(ownerId)} (level ${level})`, note: note || undefined }],
+                    history: [...r.history, { id: `h-re-${r.history.length + 1}`, at: DEMO_NOW, actor: persona.name, action: `Reassigned to ${staffName(ownerId)} (level ${level})`, note: note || undefined }],
                   }
                 : r,
             ),
@@ -462,7 +464,7 @@ export function EscalationsPage() {
           setRows((list) =>
             list.map((r) =>
               r.id === resolving.id
-                ? { ...r, status: "resolved", history: [...r.history, { id: `h-res-${r.history.length + 1}`, at: DEMO_NOW, actor: "Neha Kapoor", action: "Resolved", note }] }
+                ? { ...r, status: "resolved", history: [...r.history, { id: `h-res-${r.history.length + 1}`, at: DEMO_NOW, actor: persona.name, action: "Resolved", note }] }
                 : r,
             ),
           );

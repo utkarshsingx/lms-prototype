@@ -287,7 +287,7 @@ export function MyUniversityView({ student, university }: { student: Student; un
         title="My university"
         sub={`Your ${university.name} identity, the current semester, how the university calendar lines up with ACCA, and announcements from the university.`}
         actions={
-          <LinkButton href="/discussions" variant="outline">
+          <LinkButton href="/discussions?space=cohort" variant="outline">
             <MessagesSquare aria-hidden className="size-4" />
             Cohort community
           </LinkButton>
@@ -352,7 +352,7 @@ export function MyUniversityView({ student, university }: { student: Student; un
                     aria-label={`Copy ${f.label}`}
                     onClick={() => {
                       try {
-                        void navigator.clipboard?.writeText(f.copy!);
+                        navigator.clipboard?.writeText(f.copy!).catch(() => {});
                       } catch {
                         /* clipboard blocked */
                       }
@@ -457,7 +457,7 @@ export function MyUniversityView({ student, university }: { student: Student; un
 
         <div className="min-w-0 space-y-5">
           <Card className="p-5">
-            <MicroLabel>Today</MicroLabel>
+            <MicroLabel>{nextClass && !nextClass.start.startsWith(ACCA_TODAY) ? "Next ACCA class" : "Today"}</MicroLabel>
             {nextClass ? (
               <div className="mt-2.5">
                 <p className="text-[14px] font-semibold text-ink">
@@ -493,7 +493,7 @@ export function MyUniversityView({ student, university }: { student: Student; un
               <LinkButton href="/leaderboard" size="sm" variant="outline">
                 Cohort leaderboard
               </LinkButton>
-              <LinkButton href="/discussions" size="sm" variant="ghost">
+              <LinkButton href="/discussions?space=cohort" size="sm" variant="ghost">
                 Cohort community
               </LinkButton>
             </div>

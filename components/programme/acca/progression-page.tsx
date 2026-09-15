@@ -229,7 +229,7 @@ export function ProgressionPage() {
         return (
           <span className="flex items-center gap-2">
             <span className="font-mono text-[12px] font-semibold text-ink">{code}</span>
-            {strategic && r.epsmStatus !== "complete" ? <StatusPill status="Needed before SBL" tone="rose" size="sm" /> : null}
+            {strategic && r.epsmStatus !== "complete" ? <StatusPill status="Recommended before SBL" tone="amber" size="sm" /> : null}
           </span>
         );
       },

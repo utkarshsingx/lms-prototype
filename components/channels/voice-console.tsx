@@ -20,7 +20,8 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { Badge, LiveDot, type Tone } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/field";
+import { Field, Select, Switch, Textarea } from "@/components/ui/field";
+import { FormDrawer } from "@/components/ui/form-drawer";
 import { Segmented } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/toast";
 
@@ -73,6 +74,7 @@ function Waveform({ seed, active }: { seed: string; active?: boolean }) {
 export function VoiceConsole() {
   const [filter, setFilter] = useState("all");
   const [open, setOpen] = useState<string | null>(calls[0].id);
+  const [scriptOpen, setScriptOpen] = useState(false);
   const [guards, setGuards] = useState(
     Object.fromEntries(voiceGuardrails.map((g) => [g.id, g.on])),
   );
@@ -153,6 +155,7 @@ export function VoiceConsole() {
                     {new Date(c.startedAt).toLocaleDateString("en-GB", {
                       day: "numeric",
                       month: "short",
+                      timeZone: "Asia/Kolkata",
                     })}
                   </p>
                 </div>
@@ -275,9 +278,47 @@ export function VoiceConsole() {
               ))}
             </dl>
 
-            <Button variant="secondary" size="sm" className="w-full">
+            <Button variant="secondary" size="sm" className="w-full" onClick={() => setScriptOpen(true)}>
               Edit call script
             </Button>
+            <FormDrawer
+              open={scriptOpen}
+              onClose={() => setScriptOpen(false)}
+              title="Edit call script"
+              sub="The voice agent reads this script on outbound reminder calls."
+              submitLabel="Save script"
+              onSubmit={(data) => {
+                toast({
+                  title: "Call script saved",
+                  body: `${String(data.get("script-type"))} calls use the new script from the next call.`,
+                });
+                setScriptOpen(false);
+              }}
+            >
+              <div className="space-y-4">
+                <Field label="Call type">
+                  <Select name="script-type" defaultValue="Exam entry reminder">
+                    <option>Exam entry reminder</option>
+                    <option>Fee instalment reminder</option>
+                    <option>Live class reminder</option>
+                  </Select>
+                </Field>
+                <Field label="Opening line" hint="The agent says it is automated in the first sentence.">
+                  <Textarea
+                    name="opening"
+                    rows={3}
+                    defaultValue="Hello, this is the automated assistant calling from ZSkillup about your ACCA studies. Is now a good time for a quick reminder?"
+                  />
+                </Field>
+                <Field label="Hand off to a person when">
+                  <Textarea
+                    name="handoff"
+                    rows={3}
+                    defaultValue="The learner asks about a refund, disputes a fee, mentions a medical or personal emergency, or asks to speak to someone."
+                  />
+                </Field>
+              </div>
+            </FormDrawer>
           </div>
         </Card>
 

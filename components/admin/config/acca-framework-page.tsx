@@ -124,7 +124,7 @@ export function AccaFrameworkPage() {
               onClick={() =>
                 toast({
                   title: "ACCA framework published",
-                  body: "15 papers, 7 exemption rules and the mapping framework are live in every workspace.",
+                  body: `${papers.length} papers, ${rules.length} exemption rules and mapping framework ${frameworkVersion} are live in every workspace.`,
                 })
               }
             >
