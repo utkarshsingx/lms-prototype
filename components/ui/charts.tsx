@@ -646,8 +646,10 @@ export function LineChart({
         </div>
       </div>
 
-      {/* the same numbers for screen readers */}
-      <table className="sr-only">
+      {/* The same numbers for screen readers. sr-only sits on a wrapper, not the
+          table: a table will not shrink to 1px, so it widened the page on phones. */}
+      <div className="sr-only">
+      <table>
         <thead>
           <tr>
             <th scope="col">Label</th>
@@ -669,6 +671,7 @@ export function LineChart({
           ))}
         </tbody>
       </table>
+      </div>
     </figure>
   );
 }
